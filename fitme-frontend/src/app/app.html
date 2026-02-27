@@ -1,14 +1,31 @@
-<nav class="sidebar">
-  <ul>
-    <li><a routerLink="/homepage" routerLinkActive="active">Homepage</a></li>
-    <li><a routerLink="/tpchat" routerLinkActive="active">TPChat</a></li>
-    <li><a routerLink="/pricelist" routerLinkActive="active">Pricelist</a></li>
-    <li><a routerLink="/aboutUs" routerLinkActive="active">AboutUs</a></li>
-    <li><a routerLink="/contact" routerLinkActive="active">Contact</a></li>
-  </ul>
-</nav>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar__top">
+      <div class="brand">
+        <div class="brand__logo">FM</div>
+        <div class="brand__text">
+          <div class="brand__name">FITME</div>
+          <div class="brand__sub">Training System</div>
+        </div>
+      </div>
+    </div>
 
-<!-- Hauptinhalt (wechselt dynamisch) -->
-<main class="content">
-  <router-outlet></router-outlet>
-</main>
+    <nav class="sidebar__nav">
+      <a routerLink="/homepage" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Homepage</a>
+      <a routerLink="/tpchat" routerLinkActive="active">TPChat</a>
+      <a routerLink="/pricelist" routerLinkActive="active">Pricelist</a>
+      <a routerLink="/aboutUs" routerLinkActive="active">AboutUs</a>
+      <a routerLink="/contact" routerLinkActive="active">Contact</a>
+    </nav>
+
+    <div class="sidebar__bottom">
+      <div class="sidebar__hint">v0.1</div>
+    </div>
+  </aside>
+
+  <main class="page">
+    <div class="page__inner">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>
