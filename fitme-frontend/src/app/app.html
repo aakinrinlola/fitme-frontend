@@ -1,3 +1,14 @@
-<router-outlet>
-  Hallo
-</router-outlet>
+<nav class="sidebar">
+  <ul>
+    <li><a routerLink="/homepage" routerLinkActive="active">Homepage</a></li>
+    <li><a routerLink="/tpchat" routerLinkActive="active">TPChat</a></li>
+    <li><a routerLink="/pricelist" routerLinkActive="active">Pricelist</a></li>
+    <li><a routerLink="/aboutUs" routerLinkActive="active">AboutUs</a></li>
+    <li><a routerLink="/contact" routerLinkActive="active">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- Hauptinhalt (wechselt dynamisch) -->
+<main class="content">
+  <router-outlet></router-outlet>
+</main>
