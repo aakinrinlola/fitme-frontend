@@ -1,10 +1,26 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from './services/auth.service';
+import { UserInfo } from './models/auth.model';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
-  template: `<router-outlet></router-outlet>`
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  templateUrl: './app.html',
+  styleUrls: ['./app.scss']
 })
-export class App {}
+export class App implements OnInit {
+  isLoggedIn = false;
+  currentUser: UserInfo | null = null;
+
+  constructor(private authService: AuthService) {}
+
+  ngOnInit(): void {
+    this.authService.currentUser$.subscribe(user => {
+      this.currentUser = user;
+      this.isLoggedIn = !!user;
+    });
+  }
+}
