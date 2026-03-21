@@ -1,0 +1,209 @@
+@use 'src/app/shared-auth';
+
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+// ── Welcome Banner ────────────────────────────────────────────────
+.welcome-banner {
+  background: #0b0d10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 22px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  &__title {
+    margin: 0 0 4px;
+    font-size: 1.5rem;
+    font-weight: 800;
+  }
+
+  &__sub {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+}
+
+// ── Stats Row ─────────────────────────────────────────────────────
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+
+  @media (max-width: 800px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.stat-card {
+  background: #0b0d10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+
+  &__value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  &__label {
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.50);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+}
+
+// ── Section ───────────────────────────────────────────────────────
+.section {
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+  }
+}
+
+// ── Plan Grid ─────────────────────────────────────────────────────
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.plan-card {
+  background: #0b0d10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  &__name {
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  &__meta {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.50);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+  }
+}
+
+.badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &--active {
+    background: rgba(80, 200, 120, 0.14);
+    border: 1px solid rgba(80, 200, 120, 0.25);
+    color: rgba(120, 220, 150, 0.95);
+  }
+
+  &--inactive {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    color: rgba(255, 255, 255, 0.50);
+  }
+}
+
+// ── Empty State ───────────────────────────────────────────────────
+.empty-state {
+  background: #0b0d10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 40px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+
+  &__icon { font-size: 2.5rem; }
+
+  &__text {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.55);
+  }
+}
+
+// ── Loading ───────────────────────────────────────────────────────
+.loading-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  padding: 20px 0;
+}
+
+// ── Quick Links ───────────────────────────────────────────────────
+.quick-links {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.quick-link-card {
+  background: #0b0d10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 20px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: background 0.2s, border-color 0.2s;
+
+  &:hover {
+    background: #15171b;
+    border-color: rgba(122, 184, 255, 0.20);
+  }
+
+  &__icon { font-size: 1.5rem; }
+
+  &__label {
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.80);
+  }
+}

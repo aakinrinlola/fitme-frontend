@@ -1,1 +1,101 @@
-<p>dashboard works!</p>
+<div class="dashboard-page">
+
+  <!-- Welcome Banner -->
+  <div class="welcome-banner">
+    <div class="welcome-banner__text">
+      <h1 class="welcome-banner__title">
+        Hey{{ currentUser ? ', ' + currentUser.username : '' }}! 💪
+      </h1>
+      <p class="welcome-banner__sub">Hier ist dein Training-Überblick.</p>
+    </div>
+    <div class="welcome-banner__actions">
+      <a routerLink="/training-plan/create" class="btn btn--primary">+ Neuer Plan</a>
+      <a routerLink="/profile" class="btn btn--secondary">Profil</a>
+    </div>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="stats-row" *ngIf="currentUser">
+    <div class="stat-card">
+      <div class="stat-card__value">{{ currentUser.fitnessLevel | titlecase }}</div>
+      <div class="stat-card__label">Fitnesslevel</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__value">{{ currentUser.age || '—' }}</div>
+      <div class="stat-card__label">Alter</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__value">{{ currentUser.weightKg || '—' }} kg</div>
+      <div class="stat-card__label">Gewicht</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__value">{{ currentUser.heightCm || '—' }} cm</div>
+      <div class="stat-card__label">Größe</div>
+    </div>
+  </div>
+
+  <!-- Plans Section -->
+  <div class="section">
+    <div class="section__header">
+      <h2 class="section__title">Meine Trainingspläne</h2>
+      <a routerLink="/history" class="btn btn--secondary btn--sm">Trainingshistorie</a>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-row">
+      <span class="spinner"></span>
+      <span>Lade Pläne…</span>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="errorMessage && !isLoading" class="alert alert--error">{{ errorMessage }}</div>
+
+    <!-- Plan cards -->
+    <ng-container *ngIf="!isLoading && !errorMessage">
+      <div *ngIf="(plans$ | async) as plans">
+
+        <div *ngIf="plans.length === 0" class="empty-state">
+          <div class="empty-state__icon">🏋️</div>
+          <p class="empty-state__text">Du hast noch keine Trainingspläne.</p>
+          <a routerLink="/training-plan/create" class="btn btn--primary">Ersten Plan erstellen</a>
+        </div>
+
+        <div *ngIf="plans.length > 0" class="plan-grid">
+          <div *ngFor="let plan of plans" class="plan-card">
+            <div class="plan-card__header">
+              <div class="plan-card__name">{{ plan.planName }}</div>
+              <span class="badge" [class.badge--active]="plan.active" [class.badge--inactive]="!plan.active">
+                {{ plan.active ? 'Aktiv' : 'Inaktiv' }}
+              </span>
+            </div>
+            <div class="plan-card__meta">
+              <span>{{ plan.exerciseCount }} Übungen</span>
+            </div>
+            <div class="plan-card__actions">
+              <a [routerLink]="['/training-plan', plan.id]" class="btn btn--secondary btn--sm">Details</a>
+              <a [routerLink]="['/feedback', plan.id]" class="btn btn--primary btn--sm">Feedback geben</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Quick Links -->
+  <div class="quick-links">
+    <a routerLink="/tpchat" class="quick-link-card">
+      <div class="quick-link-card__icon">💬</div>
+      <div class="quick-link-card__label">TPChat — KI-Beratung</div>
+    </a>
+    <a routerLink="/history" class="quick-link-card">
+      <div class="quick-link-card__icon">📊</div>
+      <div class="quick-link-card__label">Trainingshistorie</div>
+    </a>
+    <a routerLink="/profile" class="quick-link-card">
+      <div class="quick-link-card__icon">👤</div>
+      <div class="quick-link-card__label">Profil bearbeiten</div>
+    </a>
+  </div>
+
+</div>

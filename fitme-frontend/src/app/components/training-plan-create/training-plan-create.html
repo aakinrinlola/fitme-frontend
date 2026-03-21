@@ -1,1 +1,166 @@
-<p>training-plan-create works!</p>
+<div class="create-page">
+
+  <div class="create-page__back">
+    <a routerLink="/dashboard" class="back-link">← Zurück zum Dashboard</a>
+  </div>
+
+  <div class="create-header">
+    <h1 class="create-header__title">Neuen Trainingsplan erstellen</h1>
+    <p class="create-header__sub">Definiere deinen Plan und die enthaltenen Übungen.</p>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert--error">⚠ {{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="alert alert--success">✓ {{ successMessage }}</div>
+
+  <form (ngSubmit)="onSubmit()" #createForm="ngForm" class="create-form">
+
+    <!-- Plan Meta -->
+    <div class="card">
+      <h2 class="card__title">Plandetails</h2>
+
+      <div class="form-group">
+        <label class="form-label" for="planName">Planname *</label>
+        <input
+          id="planName"
+          class="form-input"
+          type="text"
+          [(ngModel)]="planName"
+          name="planName"
+          required
+          placeholder="z.B. Push Day, Oberkörper A, …"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="description">Beschreibung (optional)</label>
+        <textarea
+          id="description"
+          class="form-textarea"
+          [(ngModel)]="description"
+          name="description"
+          rows="2"
+          placeholder="Kurze Beschreibung des Plans …"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Exercises -->
+    <div class="card">
+      <div class="card__header">
+        <h2 class="card__title">Übungen</h2>
+        <button type="button" class="btn btn--secondary btn--sm" (click)="addExercise()">
+          + Übung hinzufügen
+        </button>
+      </div>
+
+      <div class="exercise-list">
+        <div *ngFor="let ex of exercises; let i = index" class="exercise-row">
+
+          <div class="exercise-row__num">{{ i + 1 }}</div>
+
+          <div class="exercise-row__fields">
+            <!-- Name -->
+            <div class="form-group form-group--wide">
+              <label class="form-label">Übungsname *</label>
+              <input
+                class="form-input"
+                type="text"
+                [(ngModel)]="ex.exerciseName"
+                [name]="'exerciseName_' + i"
+                required
+                placeholder="z.B. Bankdrücken"
+              />
+            </div>
+
+            <!-- Sets -->
+            <div class="form-group">
+              <label class="form-label">Sätze</label>
+              <input
+                class="form-input"
+                type="number"
+                [(ngModel)]="ex.sets"
+                [name]="'sets_' + i"
+                min="1"
+                max="20"
+              />
+            </div>
+
+            <!-- Reps -->
+            <div class="form-group">
+              <label class="form-label">Wdh</label>
+              <input
+                class="form-input"
+                type="number"
+                [(ngModel)]="ex.reps"
+                [name]="'reps_' + i"
+                min="1"
+                max="100"
+              />
+            </div>
+
+            <!-- Weight -->
+            <div class="form-group">
+              <label class="form-label">Gewicht (kg)</label>
+              <input
+                class="form-input"
+                type="number"
+                [(ngModel)]="ex.weightKg"
+                [name]="'weight_' + i"
+                min="0"
+                step="0.5"
+              />
+            </div>
+
+            <!-- Rest -->
+            <div class="form-group">
+              <label class="form-label">Pause (s)</label>
+              <input
+                class="form-input"
+                type="number"
+                [(ngModel)]="ex.restSeconds"
+                [name]="'rest_' + i"
+                min="0"
+                max="600"
+              />
+            </div>
+
+            <!-- Target RPE -->
+            <div class="form-group">
+              <label class="form-label">Ziel-RPE</label>
+              <input
+                class="form-input"
+                type="number"
+                [(ngModel)]="ex.targetRpe"
+                [name]="'rpe_' + i"
+                min="1"
+                max="10"
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="exercise-row__remove"
+            (click)="removeExercise(i)"
+            [disabled]="exercises.length === 1"
+            title="Übung entfernen"
+          >×</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="create-actions">
+      <a routerLink="/dashboard" class="btn btn--secondary">Abbrechen</a>
+      <button
+        type="submit"
+        class="btn btn--primary"
+        [disabled]="isLoading || !createForm.valid"
+      >
+        <span *ngIf="!isLoading">Plan erstellen</span>
+        <span *ngIf="isLoading" class="spinner"></span>
+      </button>
+    </div>
+
+  </form>
+</div>

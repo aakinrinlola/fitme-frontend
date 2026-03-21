@@ -23,7 +23,7 @@
           </div>
           <div class="step">
             <div class="step__dot"></div>
-            <div class="step__text">KI analysiert & passt Plan an</div>
+            <div class="step__text">KI analysiert &amp; passt Plan an</div>
           </div>
           <div class="step">
             <div class="step__dot"></div>
@@ -54,27 +54,27 @@
         </div>
 
         <div class="rpe-scale__bar">
-          <div class="rpe-tick">1</div>
-          <div class="rpe-tick">2</div>
-          <div class="rpe-tick">3</div>
-          <div class="rpe-tick">4</div>
-          <div class="rpe-tick">5</div>
-          <div class="rpe-tick">6</div>
-          <div class="rpe-tick">7</div>
-          <div class="rpe-tick" (click)="selectRPE(8)">8</div>
-          <div class="rpe-tick">9</div>
-          <div class="rpe-tick">10</div>
+          <div
+            *ngFor="let n of [1,2,3,4,5,6,7,8,9,10]"
+            class="rpe-tick"
+            [class.rpe-tick--active]="selectedRPE === n"
+            (click)="selectRPE(n)"
+          >{{ n }}</div>
         </div>
 
-        <!-- Placeholder for later (Slider / Selection) -->
         <div class="rpe-scale__control">
           <div class="rpe-control">
-            <div class="rpe-control__label">Dein RPE (später Slider/Buttons):</div>
-            <div class="rpe-control__value">—</div>
+            <div class="rpe-control__label">Ausgewählter RPE:</div>
+            <div class="rpe-control__value">{{ selectedRPE ?? '—' }}</div>
           </div>
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="errorMessage" class="tpchat-error">
+    ⚠ {{ errorMessage }}
   </div>
 
   <!-- Chat Area -->
@@ -83,38 +83,32 @@
       <div class="chat-window__header">
         <div class="chat-window__title">Chat mit der KI</div>
         <div class="chat-window__status">
-          <span class="status-dot"></span>
-          <span class="status-text">bereit</span>
+          <span class="status-dot" [class.status-dot--loading]="isLoading"></span>
+          <span class="status-text">{{ isLoading ? 'lädt…' : 'bereit' }}</span>
         </div>
       </div>
 
       <div class="chat-window__body">
-        <!-- Example messages (later replace by *ngFor) -->
-        <div class="chat-message chat-message--ai">
+        <div
+          *ngFor="let msg of messages"
+          class="chat-message"
+          [class.chat-message--ai]="msg.role === 'ai'"
+          [class.chat-message--user]="msg.role === 'user'"
+        >
           <div class="chat-bubble">
-            <div class="chat-bubble__meta">KI</div>
-            <div class="chat-bubble__text">
-              Hi! Gib mir deinen RPE vom heutigen Training und sag kurz, was schwer war (z.B. Kniebeugen).
-              Dann passe ich deinen Plan an.
-            </div>
+            <div class="chat-bubble__meta">{{ msg.role === 'ai' ? 'KI' : 'Du' }}</div>
+            <div class="chat-bubble__text">{{ msg.text }}</div>
           </div>
         </div>
 
-        <div class="chat-message chat-message--user">
-          <div class="chat-bubble">
-            <div class="chat-bubble__meta">Du</div>
-            <div class="chat-bubble__text">
-              RPE war heute 8. Bankdrücken war sehr schwer in den letzten Sätzen.
-            </div>
-          </div>
-        </div>
-
-        <div class="chat-message chat-message--ai">
+        <!-- Loading indicator -->
+        <div *ngIf="isLoading" class="chat-message chat-message--ai">
           <div class="chat-bubble">
             <div class="chat-bubble__meta">KI</div>
-            <div class="chat-bubble__text">
-              Verstanden. Für das nächste Training senke ich das Volumen leicht (1 Satz weniger) und
-              schlage eine kleinere Steigerung vor. Möchtest du eher Kraft oder Hypertrophie fokussieren?
+            <div class="chat-bubble__text chat-bubble__text--loading">
+              <span class="dot-pulse"></span>
+              <span class="dot-pulse"></span>
+              <span class="dot-pulse"></span>
             </div>
           </div>
         </div>
@@ -123,10 +117,20 @@
       <div class="chat-window__input">
         <div class="chat-input">
           <div class="chat-input__field">
-            <input [(ngModel)]="userInput" (keyup.enter)="sendMessage()" />
+            <input
+              class="chat-input__text"
+              [(ngModel)]="userInput"
+              (keyup.enter)="sendMessage()"
+              placeholder="Nachricht eingeben… (Enter zum Senden)"
+              [disabled]="isLoading"
+            />
           </div>
           <div class="chat-input__actions">
-            <button (click)="sendMessage()">Senden</button>
+            <button
+              class="chat-input__send"
+              (click)="sendMessage()"
+              [disabled]="isLoading || !userInput.trim()"
+            >Senden</button>
           </div>
         </div>
       </div>

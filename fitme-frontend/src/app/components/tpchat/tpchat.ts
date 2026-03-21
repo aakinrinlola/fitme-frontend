@@ -10,6 +10,7 @@ interface Message {
 
 @Component({
   selector: 'app-tpchat',
+  standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './tpchat.html',
   styleUrls: ['./tpchat.scss']
@@ -36,23 +37,17 @@ export class TpchatComponent {
     const text = this.userInput.trim();
     if (!text) return;
 
-    // UI reset
     this.errorMessage = null;
-
-    // 1) User message im Chat anzeigen
     this.messages.push({ role: 'user', text });
 
-    // 2) Payload bauen
     const payload: ChatRequest = {
       message: text,
       rpe: this.selectedRPE
     };
 
-    // 3) Input leeren + Loading setzen
     this.userInput = '';
     this.isLoading = true;
 
-    // 4) POST ans Backend
     this.chatService.sendMessage(payload).subscribe({
       next: (res) => {
         this.messages.push({ role: 'ai', text: res.answer ?? '(keine Antwort)' });
@@ -62,8 +57,6 @@ export class TpchatComponent {
         console.error('Chat Fehler:', err);
         this.errorMessage = 'Backend nicht erreichbar oder Fehler beim Request.';
         this.isLoading = false;
-
-        // Optional: Fehlermeldung auch als AI-Message anzeigen
         this.messages.push({
           role: 'ai',
           text: 'Ich konnte das Backend gerade nicht erreichen. Bitte später nochmal versuchen.'

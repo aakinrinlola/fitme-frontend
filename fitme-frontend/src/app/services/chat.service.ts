@@ -12,11 +12,9 @@ export interface ChatResponse {
   answer: string;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ChatService {
-  private baseUrl = environment.apiUrl;
+  private baseUrl = `${environment.apiUrl}/api`;
 
   constructor(private http: HttpClient) {}
 
