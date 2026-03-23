@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-pricelist',
-  imports: [],
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './pricelist.html',
-  styleUrl: './pricelist.scss',
+  styleUrls: ['./pricelist.scss'],
 })
-export class Pricelist {
-
-}
+export class Pricelist {}

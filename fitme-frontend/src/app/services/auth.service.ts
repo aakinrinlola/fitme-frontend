@@ -50,7 +50,18 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.getAccessToken();
+    const token = this.getAccessToken();
+
+    if (!token) {
+      return false;
+    }
+
+    if (this.isTokenExpired(token)) {
+      this.logout();
+      return false;
+    }
+
+    return true;
   }
 
   getCurrentUser(): UserInfo | null {
@@ -67,5 +78,20 @@ export class AuthService {
   private loadStoredUser(): UserInfo | null {
     const stored = localStorage.getItem(this.USER_KEY);
     return stored ? JSON.parse(stored) : null;
+  }
+
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const exp = payload.exp;
+
+      if (!exp) {
+        return true;
+      }
+
+      return Date.now() >= exp * 1000;
+    } catch {
+      return true;
+    }
   }
 }
