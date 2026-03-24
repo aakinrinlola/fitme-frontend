@@ -11,58 +11,54 @@
 
   <div *ngIf="errorMessage && !isLoading" class="alert alert--error">{{ errorMessage }}</div>
 
-  <ng-container *ngIf="!isLoading && !errorMessage">
-    <ng-container *ngIf="(plan$ | async) as plan">
-
-      <!-- Header -->
-      <div class="tp-header">
-        <div class="tp-header__left">
-          <h1 class="tp-header__title">{{ plan.planName }}</h1>
-          <p *ngIf="plan.description" class="tp-header__desc">{{ plan.description }}</p>
-          <span class="badge" [class.badge--active]="plan.active" [class.badge--inactive]="!plan.active">
-            {{ plan.active ? 'Aktiv' : 'Inaktiv' }}
-          </span>
-        </div>
-        <div class="tp-header__actions">
-          <a [routerLink]="['/feedback', planId]" class="btn btn--primary">Feedback geben</a>
-        </div>
+  <ng-container *ngIf="!isLoading && !errorMessage && plan">
+    <!-- Header -->
+    <div class="tp-header">
+      <div class="tp-header__left">
+        <h1 class="tp-header__title">{{ plan.planName }}</h1>
+        <p *ngIf="plan.description" class="tp-header__desc">{{ plan.description }}</p>
+        <span class="badge" [class.badge--active]="plan.active" [class.badge--inactive]="!plan.active">
+          {{ plan.active ? 'Aktiv' : 'Inaktiv' }}
+        </span>
       </div>
-
-      <!-- Exercise Table -->
-      <div class="card">
-        <h2 class="card__title">Übungen ({{ plan.exercises.length }})</h2>
-
-        <div class="exercise-table-wrap">
-          <table class="exercise-table">
-            <thead>
-            <tr>
-              <th>#</th>
-              <th>Übung</th>
-              <th>Sätze</th>
-              <th>Wdh</th>
-              <th>Gewicht</th>
-              <th>Pause</th>
-              <th>Ziel-RPE</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr *ngFor="let ex of plan.exercises">
-              <td class="td--num">{{ ex.order + 1 }}</td>
-              <td class="td--name">{{ ex.exerciseName }}</td>
-              <td class="td--center">{{ ex.sets }}</td>
-              <td class="td--center">{{ ex.reps }}</td>
-              <td class="td--center">{{ ex.weightKg }} kg</td>
-              <td class="td--center">{{ formatRest(ex.restSeconds) }}</td>
-              <td class="td--center">
-                <span class="rpe-badge">{{ ex.targetRpe }}</span>
-              </td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="tp-header__actions">
+        <a [routerLink]="['/feedback', planId]" class="btn btn--primary">Feedback geben</a>
       </div>
+    </div>
 
-    </ng-container>
+    <!-- Exercise Table -->
+    <div class="card">
+      <h2 class="card__title">Übungen ({{ plan.exercises.length }})</h2>
+
+      <div class="exercise-table-wrap">
+        <table class="exercise-table">
+          <thead>
+          <tr>
+            <th>#</th>
+            <th>Übung</th>
+            <th>Sätze</th>
+            <th>Wdh</th>
+            <th>Gewicht</th>
+            <th>Pause</th>
+            <th>Ziel-RPE</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let ex of plan.exercises">
+            <td class="td--num">{{ ex.order + 1 }}</td>
+            <td class="td--name">{{ ex.exerciseName }}</td>
+            <td class="td--center">{{ ex.sets }}</td>
+            <td class="td--center">{{ ex.reps }}</td>
+            <td class="td--center">{{ ex.weightKg }} kg</td>
+            <td class="td--center">{{ formatRest(ex.restSeconds) }}</td>
+            <td class="td--center">
+              <span class="rpe-badge">{{ ex.targetRpe }}</span>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </ng-container>
 
 </div>

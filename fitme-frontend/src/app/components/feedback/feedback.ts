@@ -2,10 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Observable } from 'rxjs';
 import { TrainingService } from '../../services/training.service';
 import {
-  TrainingPlanDetail,
   SessionFeedbackRequest,
   SessionFeedbackResponse,
   ExerciseFeedback
@@ -23,7 +21,6 @@ interface ExerciseFeedbackForm extends ExerciseFeedback {
   styleUrls: ['./feedback.scss']
 })
 export class Feedback implements OnInit {
-  plan$!: Observable<TrainingPlanDetail>;
   planId!: number;
 
   sessionRpe = 7;
@@ -48,8 +45,8 @@ export class Feedback implements OnInit {
 
   ngOnInit(): void {
     this.planId = Number(this.route.snapshot.paramMap.get('planId'));
-    this.plan$ = this.trainingService.getPlan(this.planId);
-    this.plan$.subscribe({
+
+    this.trainingService.getPlan(this.planId).subscribe({
       next: plan => {
         this.exerciseFeedbacks = plan.exercises.map(ex => ({
           plannedExerciseId: ex.id,

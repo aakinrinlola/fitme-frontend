@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Observable } from 'rxjs';
 import { TrainingService } from '../../services/training.service';
 import { TrainingPlanDetail } from '../../models/training.model';
 
@@ -13,7 +12,7 @@ import { TrainingPlanDetail } from '../../models/training.model';
   styleUrls: ['./training-plan.scss']
 })
 export class TrainingPlan implements OnInit {
-  plan$!: Observable<TrainingPlanDetail>;
+  plan: TrainingPlanDetail | null = null;
   planId!: number;
   isLoading = true;
   errorMessage: string | null = null;
@@ -25,9 +24,12 @@ export class TrainingPlan implements OnInit {
 
   ngOnInit(): void {
     this.planId = Number(this.route.snapshot.paramMap.get('id'));
-    this.plan$ = this.trainingService.getPlan(this.planId);
-    this.plan$.subscribe({
-      next: () => { this.isLoading = false; },
+
+    this.trainingService.getPlan(this.planId).subscribe({
+      next: plan => {
+        this.plan = plan;
+        this.isLoading = false;
+      },
       error: () => {
         this.errorMessage = 'Trainingsplan konnte nicht geladen werden.';
         this.isLoading = false;

@@ -17,57 +17,53 @@
   <div *ngIf="errorMessage && !isLoading" class="alert alert--error">{{ errorMessage }}</div>
 
   <ng-container *ngIf="!isLoading && !errorMessage">
-    <ng-container *ngIf="(history$ | async) as entries">
+    <div *ngIf="historyEntries.length === 0" class="empty-state">
+      <div class="empty-state__icon">📋</div>
+      <p class="empty-state__text">Noch keine Trainingseinheiten vorhanden.</p>
+      <a routerLink="/dashboard" class="btn btn--primary">Zum Dashboard</a>
+    </div>
 
-      <div *ngIf="entries.length === 0" class="empty-state">
-        <div class="empty-state__icon">📋</div>
-        <p class="empty-state__text">Noch keine Trainingseinheiten vorhanden.</p>
-        <a routerLink="/dashboard" class="btn btn--primary">Zum Dashboard</a>
-      </div>
+    <div *ngIf="historyEntries.length > 0" class="history-list">
+      <div *ngFor="let entry of historyEntries" class="history-entry">
 
-      <div *ngIf="entries.length > 0" class="history-list">
-        <div *ngFor="let entry of entries" class="history-entry">
-
-          <!-- Entry Header -->
-          <div
-            class="history-entry__header"
-            (click)="toggleExpand(entry.sessionId)"
-            [class.history-entry__header--expanded]="expandedId === entry.sessionId"
-          >
-            <div class="history-entry__left">
-              <span class="rpe-pill" [ngClass]="rpeClass(entry.sessionRpe)">
-                RPE {{ entry.sessionRpe }}
+        <!-- Entry Header -->
+        <div
+          class="history-entry__header"
+          (click)="toggleExpand(entry.sessionId)"
+          [class.history-entry__header--expanded]="expandedId === entry.sessionId"
+        >
+          <div class="history-entry__left">
+            <span class="rpe-pill" [ngClass]="rpeClass(entry.sessionRpe)">
+              RPE {{ entry.sessionRpe }}
+            </span>
+            <div class="history-entry__meta">
+              <span class="history-entry__date">{{ formatDate(entry.date) }}</span>
+              <span class="history-entry__note" *ngIf="entry.userNote">
+                "{{ entry.userNote }}"
               </span>
-              <div class="history-entry__meta">
-                <span class="history-entry__date">{{ formatDate(entry.date) }}</span>
-                <span class="history-entry__note" *ngIf="entry.userNote">
-                  "{{ entry.userNote }}"
-                </span>
-              </div>
-            </div>
-            <div class="history-entry__right">
-              <span class="badge" [class.badge--active]="entry.completed" [class.badge--inactive]="!entry.completed">
-                {{ entry.completed ? 'Abgeschlossen' : 'Offen' }}
-              </span>
-              <span class="expand-icon">{{ expandedId === entry.sessionId ? '▲' : '▼' }}</span>
             </div>
           </div>
-
-          <!-- Expanded: AI Response -->
-          <div class="history-entry__body" *ngIf="expandedId === entry.sessionId">
-            <div *ngIf="entry.aiResponse; else noAi" class="ai-response">
-              <div class="ai-response__label">🤖 KI-Feedback</div>
-              <p class="ai-response__text">{{ entry.aiResponse }}</p>
-            </div>
-            <ng-template #noAi>
-              <p class="no-ai">Kein KI-Feedback für diese Einheit vorhanden.</p>
-            </ng-template>
+          <div class="history-entry__right">
+            <span class="badge" [class.badge--active]="entry.completed" [class.badge--inactive]="!entry.completed">
+              {{ entry.completed ? 'Abgeschlossen' : 'Offen' }}
+            </span>
+            <span class="expand-icon">{{ expandedId === entry.sessionId ? '▲' : '▼' }}</span>
           </div>
-
         </div>
-      </div>
 
-    </ng-container>
+        <!-- Expanded: AI Response -->
+        <div class="history-entry__body" *ngIf="expandedId === entry.sessionId">
+          <div *ngIf="entry.aiResponse; else noAi" class="ai-response">
+            <div class="ai-response__label">🤖 KI-Feedback</div>
+            <p class="ai-response__text">{{ entry.aiResponse }}</p>
+          </div>
+          <ng-template #noAi>
+            <p class="no-ai">Kein KI-Feedback für diese Einheit vorhanden.</p>
+          </ng-template>
+        </div>
+
+      </div>
+    </div>
   </ng-container>
 
 </div>

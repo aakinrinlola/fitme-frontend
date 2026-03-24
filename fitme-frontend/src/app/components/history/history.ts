@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Observable } from 'rxjs';
 import { TrainingService } from '../../services/training.service';
 import { SessionHistoryEntry } from '../../models/training.model';
 
@@ -13,7 +12,7 @@ import { SessionHistoryEntry } from '../../models/training.model';
   styleUrls: ['./history.scss']
 })
 export class History implements OnInit {
-  history$!: Observable<SessionHistoryEntry[]>;
+  historyEntries: SessionHistoryEntry[] = [];
   isLoading = true;
   errorMessage: string | null = null;
   expandedId: number | null = null;
@@ -21,9 +20,11 @@ export class History implements OnInit {
   constructor(private trainingService: TrainingService) {}
 
   ngOnInit(): void {
-    this.history$ = this.trainingService.getHistory();
-    this.history$.subscribe({
-      next: () => { this.isLoading = false; },
+    this.trainingService.getHistory().subscribe({
+      next: entries => {
+        this.historyEntries = entries;
+        this.isLoading = false;
+      },
       error: () => {
         this.errorMessage = 'Verlauf konnte nicht geladen werden.';
         this.isLoading = false;

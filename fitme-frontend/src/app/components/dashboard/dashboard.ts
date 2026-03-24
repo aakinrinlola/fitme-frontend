@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Observable } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { TrainingService } from '../../services/training.service';
 import { TrainingPlanSummary } from '../../models/training.model';
@@ -16,7 +15,7 @@ import { UserInfo } from '../../models/auth.model';
 })
 export class Dashboard implements OnInit {
   currentUser: UserInfo | null = null;
-  plans$!: Observable<TrainingPlanSummary[]>;
+  plans: TrainingPlanSummary[] = [];
   isLoading = true;
   errorMessage: string | null = null;
 
@@ -33,9 +32,12 @@ export class Dashboard implements OnInit {
   loadPlans(): void {
     this.isLoading = true;
     this.errorMessage = null;
-    this.plans$ = this.trainingService.getMyPlans();
-    this.plans$.subscribe({
-      next: () => { this.isLoading = false; },
+
+    this.trainingService.getMyPlans().subscribe({
+      next: plans => {
+        this.plans = plans;
+        this.isLoading = false;
+      },
       error: () => {
         this.errorMessage = 'Trainingspläne konnten nicht geladen werden.';
         this.isLoading = false;
