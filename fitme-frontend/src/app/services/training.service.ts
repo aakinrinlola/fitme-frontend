@@ -13,6 +13,23 @@ import {
   UserProfile
 } from '../models/training.model';
 
+export interface GeneratePlanRequest {
+  goal: string;
+  fitnessLevel: string;
+  daysPerWeek: number;
+  focus: string;
+  equipment: string;
+  age: number | null;
+  weightKg: number | null;
+  notes: string | null;
+}
+
+export interface GeneratePlanResponse {
+  // The backend should return the raw AI text in one of these fields
+  content?: string;
+  answer?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TrainingService {
   private readonly baseUrl = `${environment.apiUrl}/api`;
@@ -32,7 +49,17 @@ export class TrainingService {
     return this.http.get<TrainingPlanDetail>(`${this.baseUrl}/training-plans/${planId}`);
   }
 
-  // ── Feedback ────────────────────────────────────────────────────
+  // ── AI Plan Generation ─────────────────────────────────────────
+  // Calls POST /api/training-plans/generate
+  // Backend receives structured parameters and returns the AI-generated JSON text.
+  generatePlanWithAi(request: GeneratePlanRequest): Observable<GeneratePlanResponse> {
+    return this.http.post<GeneratePlanResponse>(
+      `${this.baseUrl}/training-plans/generate`,
+      request
+    );
+  }
+
+  // ── Feedback ───────────────────────────────────────────────────
   submitFeedback(request: SessionFeedbackRequest): Observable<SessionFeedbackResponse> {
     return this.http.post<SessionFeedbackResponse>(`${this.baseUrl}/feedback`, request);
   }
@@ -41,7 +68,7 @@ export class TrainingService {
     return this.http.get<SessionHistoryEntry[]>(`${this.baseUrl}/feedback/history`);
   }
 
-  // ── User Profile ─────────────────────────────────────────────────
+  // ── User Profile ───────────────────────────────────────────────
   getProfile(): Observable<UserProfile> {
     return this.http.get<UserProfile>(`${this.baseUrl}/users/me`);
   }

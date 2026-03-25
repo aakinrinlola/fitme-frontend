@@ -13,6 +13,16 @@ export interface CreateTrainingPlanRequest {
   exercises: ExerciseInput[];
 }
 
+/** KI-Plan-Generierung — Feldnamen müssen exakt zum Backend-DTO passen */
+export interface GeneratePlanRequest {
+  planName: string;
+  userPrompt: string;
+  fitnessGoal?: string;
+  daysPerWeek?: number;
+  focusMuscles?: string;
+  experienceLevel?: string;
+}
+
 export interface TrainingPlanSummary {
   id: number;
   planName: string;
