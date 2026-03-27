@@ -58,8 +58,9 @@
           />
         </div>
 
-        <div class="form-group" style="margin-top: 14px;">
+        <div class="form-group form-group--spaced">
           <label class="form-label" for="aiUserPrompt">Beschreibe deinen Wunsch *</label>
+
           <textarea
             id="aiUserPrompt"
             class="form-textarea form-textarea--large"
@@ -70,6 +71,13 @@
             rows="4"
             placeholder="z.B. Ich möchte 3x pro Woche trainieren, bin Anfänger und möchte Muskeln aufbauen. Fokus auf Oberkörper und Beine."
           ></textarea>
+
+          <div
+            class="field-error"
+            *ngIf="aiUserPrompt && aiUserPrompt.trim().length > 0 && aiUserPrompt.trim().length < 10"
+          >
+            Bitte gib mindestens 10 Zeichen ein.
+          </div>
         </div>
       </div>
 

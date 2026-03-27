@@ -4,12 +4,12 @@ import { Login } from './components/login/login';
 import { Register } from './components/register/register';
 import { Dashboard } from './components/dashboard/dashboard';
 import { TrainingPlan } from './components/training-plan/training-plan';
-import { TrainingPlanCreate } from './components/training-plan-create/training-plan-create';
 import { Feedback } from './components/feedback/feedback';
 import { History } from './components/history/history';
 import { Profile } from './components/profile/profile';
 
 import { authGuard, guestGuard } from './guards/auth.guard';
+import {TrainingPlanCreate} from './components/training-plan-create/training-plan-create';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },

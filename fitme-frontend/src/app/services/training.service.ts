@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   CreateTrainingPlanRequest,
+  GeneratePlanRequest,
   TrainingPlanSummary,
   TrainingPlanDetail,
   SessionFeedbackRequest,
@@ -13,21 +14,15 @@ import {
   UserProfile
 } from '../models/training.model';
 
-export interface GeneratePlanRequest {
-  goal: string;
-  fitnessLevel: string;
-  daysPerWeek: number;
-  focus: string;
-  equipment: string;
-  age: number | null;
-  weightKg: number | null;
-  notes: string | null;
-}
-
+/**
+ * Response from POST /api/training-plans/generate.
+ * The backend saves the plan and returns its metadata (same shape as manual creation).
+ */
 export interface GeneratePlanResponse {
-  // The backend should return the raw AI text in one of these fields
-  content?: string;
-  answer?: string;
+  id: number;
+  planName: string;
+  exerciseCount: number;
+  message: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -50,8 +45,9 @@ export class TrainingService {
   }
 
   // ── AI Plan Generation ─────────────────────────────────────────
-  // Calls POST /api/training-plans/generate
-  // Backend receives structured parameters and returns the AI-generated JSON text.
+  // POST /api/training-plans/generate
+  // Backend receives GeneratePlanRequest {planName, userPrompt, fitnessGoal?, daysPerWeek?, focusMuscles?, experienceLevel?},
+  // generates the plan via AI, saves it, and returns {id, planName, exerciseCount, message}.
   generatePlanWithAi(request: GeneratePlanRequest): Observable<GeneratePlanResponse> {
     return this.http.post<GeneratePlanResponse>(
       `${this.baseUrl}/training-plans/generate`,
