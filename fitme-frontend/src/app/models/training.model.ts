@@ -39,6 +39,8 @@ export interface PlannedExercise {
   restSeconds: number;
   targetRpe: number;
   order: number;
+  /** Trainingstag-Label (z.B. "Tag A", "Tag B"). Leer-String bei manuellen Plänen. */
+  trainingDay: string;
 }
 
 export interface TrainingPlanDetail {
@@ -46,6 +48,12 @@ export interface TrainingPlanDetail {
   planName: string;
   description: string;
   active: boolean;
+  exercises: PlannedExercise[];
+}
+
+/** Gruppierte Ansicht eines Trainingstages für das UI */
+export interface TrainingDayGroup {
+  dayName: string;
   exercises: PlannedExercise[];
 }
 

@@ -12,53 +12,127 @@
   <div *ngIf="errorMessage && !isLoading" class="alert alert--error">{{ errorMessage }}</div>
 
   <ng-container *ngIf="!isLoading && !errorMessage && plan">
+
     <!-- Header -->
     <div class="tp-header">
       <div class="tp-header__left">
         <h1 class="tp-header__title">{{ plan.planName }}</h1>
         <p *ngIf="plan.description" class="tp-header__desc">{{ plan.description }}</p>
-        <span class="badge" [class.badge--active]="plan.active" [class.badge--inactive]="!plan.active">
-          {{ plan.active ? 'Aktiv' : 'Inaktiv' }}
-        </span>
+        <div class="tp-header__badges">
+          <span class="badge" [class.badge--active]="plan.active" [class.badge--inactive]="!plan.active">
+            {{ plan.active ? 'Aktiv' : 'Inaktiv' }}
+          </span>
+          <span class="badge badge--days" *ngIf="isMultiDayPlan">
+            🗓 {{ dayGroups.length }} Trainingstage
+          </span>
+        </div>
       </div>
       <div class="tp-header__actions">
         <a [routerLink]="['/feedback', planId]" class="btn btn--primary">Feedback geben</a>
       </div>
     </div>
 
-    <!-- Exercise Table -->
-    <div class="card">
-      <h2 class="card__title">Übungen ({{ plan.exercises.length }})</h2>
+    <!-- ══ MEHRTÄGIGE ANSICHT (KI-generierter Plan) ══ -->
+    <ng-container *ngIf="isMultiDayPlan">
 
-      <div class="exercise-table-wrap">
-        <table class="exercise-table">
-          <thead>
-          <tr>
-            <th>#</th>
-            <th>Übung</th>
-            <th>Sätze</th>
-            <th>Wdh</th>
-            <th>Gewicht</th>
-            <th>Pause</th>
-            <th>Ziel-RPE</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr *ngFor="let ex of plan.exercises">
-            <td class="td--num">{{ ex.order + 1 }}</td>
-            <td class="td--name">{{ ex.exerciseName }}</td>
-            <td class="td--center">{{ ex.sets }}</td>
-            <td class="td--center">{{ ex.reps }}</td>
-            <td class="td--center">{{ ex.weightKg }} kg</td>
-            <td class="td--center">{{ formatRest(ex.restSeconds) }}</td>
-            <td class="td--center">
-              <span class="rpe-badge">{{ ex.targetRpe }}</span>
-            </td>
-          </tr>
-          </tbody>
-        </table>
+      <div class="day-overview">
+        <div *ngFor="let group of dayGroups; let i = index"
+             class="day-chip"
+             [class.day-chip--a]="i === 0"
+             [class.day-chip--b]="i === 1"
+             [class.day-chip--c]="i === 2"
+             [class.day-chip--d]="i === 3">
+          {{ group.dayName }}
+          <span class="day-chip__count">{{ group.exercises.length }} Übungen</span>
+        </div>
       </div>
-    </div>
+
+      <div *ngFor="let group of dayGroups; let i = index" class="day-card" [ngClass]="dayColorClass(i)">
+
+        <!-- Tages-Header -->
+        <div class="day-card__header">
+          <div class="day-card__label">{{ group.dayName }}</div>
+          <div class="day-card__count">{{ group.exercises.length }} Übungen</div>
+        </div>
+
+        <!-- Übungstabelle -->
+        <div class="exercise-table-wrap">
+          <table class="exercise-table">
+            <thead>
+            <tr>
+              <th>#</th>
+              <th>Übung</th>
+              <th>Sätze</th>
+              <th>Wdh</th>
+              <th>Gewicht</th>
+              <th>Pause</th>
+              <th>RPE</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let ex of group.exercises; let j = index">
+              <td class="td--num">{{ j + 1 }}</td>
+              <td class="td--name">{{ ex.exerciseName }}</td>
+              <td class="td--center">{{ ex.sets }}</td>
+              <td class="td--center">{{ ex.reps }}</td>
+              <td class="td--center">{{ ex.weightKg }} kg</td>
+              <td class="td--center">{{ formatRest(ex.restSeconds) }}</td>
+              <td class="td--center">
+                <span class="rpe-badge">{{ ex.targetRpe }}</span>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- Gesamtzahl -->
+      <div class="tp-summary">
+        <span class="tp-summary__text">
+          Gesamt: <strong>{{ plan.exercises.length }}</strong> Übungen über
+          <strong>{{ dayGroups.length }}</strong> Trainingstage
+        </span>
+      </div>
+
+    </ng-container>
+
+    <!-- ══ FLACHE ANSICHT (manuell erstellter Plan) ══ -->
+    <ng-container *ngIf="!isMultiDayPlan">
+      <div class="card">
+        <h2 class="card__title">Übungen ({{ plan.exercises.length }})</h2>
+
+        <div class="exercise-table-wrap">
+          <table class="exercise-table">
+            <thead>
+            <tr>
+              <th>#</th>
+              <th>Übung</th>
+              <th>Sätze</th>
+              <th>Wdh</th>
+              <th>Gewicht</th>
+              <th>Pause</th>
+              <th>Ziel-RPE</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let ex of plan.exercises">
+              <td class="td--num">{{ ex.order + 1 }}</td>
+              <td class="td--name">{{ ex.exerciseName }}</td>
+              <td class="td--center">{{ ex.sets }}</td>
+              <td class="td--center">{{ ex.reps }}</td>
+              <td class="td--center">{{ ex.weightKg }} kg</td>
+              <td class="td--center">{{ formatRest(ex.restSeconds) }}</td>
+              <td class="td--center">
+                <span class="rpe-badge">{{ ex.targetRpe }}</span>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
   </ng-container>
 
 </div>

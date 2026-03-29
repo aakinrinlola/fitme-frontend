@@ -1,24 +1,20 @@
-//@use 'src/app/shared-auth';
-
 .tp-page {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.tp-page__back {
-  margin-bottom: -8px;
-}
+.tp-page__back { margin-bottom: -8px; }
 
 .back-link {
   color: rgba(255, 255, 255, 0.55);
   text-decoration: none;
   font-size: 0.9rem;
   transition: color 0.2s;
-
   &:hover { color: var(--accent); }
 }
 
+// ── Header ────────────────────────────────────────────────────────
 .tp-header {
   display: flex;
   justify-content: space-between;
@@ -35,12 +31,18 @@
     font-size: 1.5rem;
     font-weight: 800;
   }
-
   &__desc {
     margin: 0 0 10px;
     color: rgba(255, 255, 255, 0.55);
+    font-size: 0.9rem;
+    line-height: 1.45;
+    max-width: 640px;
   }
-
+  &__badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
   &__actions {
     display: flex;
     gap: 10px;
@@ -49,23 +51,104 @@
   }
 }
 
-.card {
-  background: #0b0d10;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 20px;
+// ── Badges ────────────────────────────────────────────────────────
+.badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-block;
 
-  &__title {
-    margin: 0 0 16px;
-    font-size: 1rem;
-    font-weight: 800;
+  &--active {
+    background: rgba(80, 200, 120, 0.14);
+    border: 1px solid rgba(80, 200, 120, 0.25);
+    color: rgba(120, 220, 150, 0.95);
+  }
+  &--inactive {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    color: rgba(255, 255, 255, 0.50);
+  }
+  &--days {
+    background: rgba(122, 184, 255, 0.12);
+    border: 1px solid rgba(122, 184, 255, 0.25);
+    color: rgba(122, 184, 255, 0.90);
   }
 }
 
-// ── Table ──────────────────────────────────────────────────────────
-.exercise-table-wrap {
-  overflow-x: auto;
+// ── Tag-Übersicht (Chips) ─────────────────────────────────────────
+.day-overview {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
+
+.day-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  border: 1px solid transparent;
+
+  &__count {
+    font-size: 0.78rem;
+    font-weight: 500;
+    opacity: 0.75;
+  }
+
+  &--a { background: rgba(122, 184, 255, 0.12); border-color: rgba(122, 184, 255, 0.28); color: rgba(122, 184, 255, 0.95); }
+  &--b { background: rgba(80, 200, 120, 0.12);  border-color: rgba(80, 200, 120, 0.28);  color: rgba(80, 200, 120, 0.95); }
+  &--c { background: rgba(255, 190, 60, 0.12);  border-color: rgba(255, 190, 60, 0.28);  color: rgba(255, 210, 100, 0.95); }
+  &--d { background: rgba(180, 100, 255, 0.12); border-color: rgba(180, 100, 255, 0.28); color: rgba(200, 140, 255, 0.95); }
+}
+
+// ── Tages-Karte ───────────────────────────────────────────────────
+.day-card {
+  background: #0b0d10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  &__label {
+    font-weight: 800;
+    font-size: 1rem;
+  }
+
+  &__count {
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.50);
+  }
+
+  // Farbige linke Border je nach Tag
+  &--a { border-left: 3px solid rgba(122, 184, 255, 0.60); }
+  &--b { border-left: 3px solid rgba(80, 200, 120, 0.60);  }
+  &--c { border-left: 3px solid rgba(255, 190, 60, 0.60);  }
+  &--d { border-left: 3px solid rgba(180, 100, 255, 0.60); }
+
+  // Header-Farbe passend zur Karte
+  &--a .day-card__header { background: rgba(122, 184, 255, 0.06); }
+  &--a .day-card__label  { color: rgba(122, 184, 255, 0.95); }
+  &--b .day-card__header { background: rgba(80, 200, 120, 0.06);  }
+  &--b .day-card__label  { color: rgba(80, 200, 120, 0.95); }
+  &--c .day-card__header { background: rgba(255, 190, 60, 0.06);  }
+  &--c .day-card__label  { color: rgba(255, 210, 100, 0.95); }
+  &--d .day-card__header { background: rgba(180, 100, 255, 0.06); }
+  &--d .day-card__label  { color: rgba(200, 140, 255, 0.95); }
+}
+
+// ── Tabelle ───────────────────────────────────────────────────────
+.exercise-table-wrap { overflow-x: auto; }
 
 .exercise-table {
   width: 100%;
@@ -74,30 +157,28 @@
 
   th {
     text-align: left;
-    padding: 10px 12px;
-    font-size: 0.78rem;
+    padding: 10px 14px;
+    font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.45);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.35);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    white-space: nowrap;
   }
 
   td {
-    padding: 12px 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     color: rgba(255, 255, 255, 0.85);
   }
 
   tr:last-child td { border-bottom: none; }
-
-  tr:hover td {
-    background: rgba(255, 255, 255, 0.02);
-  }
+  tr:hover td { background: rgba(255, 255, 255, 0.02); }
 }
 
-.td--num { color: rgba(255, 255, 255, 0.40); width: 36px; }
-.td--name { font-weight: 600; }
+.td--num   { color: rgba(255, 255, 255, 0.35); width: 36px; }
+.td--name  { font-weight: 600; }
 .td--center { text-align: center; }
 
 .rpe-badge {
@@ -111,26 +192,59 @@
   color: rgba(122, 184, 255, 0.90);
 }
 
-.badge {
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  display: inline-block;
+// ── Flache Ansicht (manuell) ──────────────────────────────────────
+.card {
+  background: #0b0d10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 20px;
 
-  &--active {
-    background: rgba(80, 200, 120, 0.14);
-    border: 1px solid rgba(80, 200, 120, 0.25);
-    color: rgba(120, 220, 150, 0.95);
-  }
-
-  &--inactive {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    color: rgba(255, 255, 255, 0.50);
+  &__title {
+    margin: 0 0 16px;
+    font-size: 1rem;
+    font-weight: 800;
   }
 }
 
+// ── Zusammenfassung ───────────────────────────────────────────────
+.tp-summary {
+  background: #0b0d10;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 14px 18px;
+  text-align: center;
+
+  &__text {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.55);
+    strong { color: rgba(255, 255, 255, 0.85); }
+  }
+}
+
+// ── Buttons ───────────────────────────────────────────────────────
+.btn {
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: background 0.2s;
+
+  &--primary {
+    background: rgba(122, 184, 255, 0.16);
+    border: 1px solid rgba(122, 184, 255, 0.28);
+    color: rgba(255, 255, 255, 0.92);
+    &:hover { background: rgba(122, 184, 255, 0.26); }
+  }
+}
+
+// ── Loading / Alert ───────────────────────────────────────────────
 .loading-row {
   display: flex;
   align-items: center;
@@ -138,3 +252,27 @@
   color: rgba(255, 255, 255, 0.55);
   padding: 20px 0;
 }
+
+.alert {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+
+  &--error {
+    background: rgba(255, 80, 80, 0.12);
+    border: 1px solid rgba(255, 80, 80, 0.25);
+    color: rgba(255, 160, 160, 0.95);
+  }
+}
+
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top-color: rgba(122, 184, 255, 0.85);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
