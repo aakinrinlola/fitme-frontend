@@ -4,30 +4,32 @@
     <a routerLink="/dashboard" class="back-link">← Zurück zum Dashboard</a>
   </div>
 
-  <!-- Result Card (shown after submission) -->
+  <!-- ══ ERGEBNIS-KARTE (nach Absenden) ══ -->
   <ng-container *ngIf="result">
     <div class="result-card">
       <div class="result-card__header">
         <h2 class="result-card__title">✓ Feedback gespeichert!</h2>
-        <div class="result-card__rpe">Session RPE: <strong>{{ result.sessionRpe }}/10</strong></div>
+        <div class="result-card__rpe">
+          Session RPE: <strong>{{ result.sessionRpe }}/10</strong>
+        </div>
       </div>
 
-      <!-- AI Explanation -->
-      <div class="result-card__ai" *ngIf="result.aiExplanation">
-        <div class="ai-label">🤖 KI-Feedback</div>
-        <p class="ai-text">{{ result.aiExplanation }}</p>
+      <!-- KI-Feedback -->
+      <div class="ai-box" *ngIf="result.aiExplanation">
+        <div class="ai-box__label">🤖 KI-Feedback</div>
+        <p class="ai-box__text">{{ result.aiExplanation }}</p>
       </div>
 
-      <!-- Adjustments Table -->
-      <div *ngIf="result.adjustments.length > 0" class="result-card__adjustments">
-        <h3 class="result-card__subtitle">Anpassungen für nächste Einheit</h3>
-        <div class="adj-table-wrap">
+      <!-- Anpassungstabelle -->
+      <div *ngIf="result.adjustments.length > 0">
+        <h3 class="section-heading">Anpassungen für nächste Einheit</h3>
+        <div class="table-wrap">
           <table class="adj-table">
             <thead>
             <tr>
               <th>Übung</th>
-              <th>Gewicht vorher</th>
-              <th>Gewicht neu</th>
+              <th>Vorher</th>
+              <th>Neu</th>
               <th>Δ</th>
               <th>Wdh</th>
               <th>Begründung</th>
@@ -37,14 +39,12 @@
             <tr *ngFor="let adj of result.adjustments">
               <td class="td--name">{{ adj.exerciseName }}</td>
               <td class="td--center">{{ adj.previousWeight }} kg</td>
-              <td class="td--center td--new">{{ adj.newWeight }} kg</td>
+              <td class="td--center td--bold">{{ adj.newWeight }} kg</td>
               <td class="td--center">
-                  <span
-                    class="diff-badge"
-                    [class.diff--up]="adj.newWeight > adj.previousWeight"
-                    [class.diff--down]="adj.newWeight < adj.previousWeight"
-                    [class.diff--same]="adj.newWeight === adj.previousWeight"
-                  >
+                  <span class="diff-badge"
+                        [class.diff--up]="adj.newWeight > adj.previousWeight"
+                        [class.diff--down]="adj.newWeight < adj.previousWeight"
+                        [class.diff--same]="adj.newWeight === adj.previousWeight">
                     {{ weightDiff(adj.previousWeight, adj.newWeight) }}
                   </span>
               </td>
@@ -56,32 +56,31 @@
         </div>
       </div>
 
-      <!-- Adherence -->
+      <!-- Adhärenz -->
       <div class="adherence-bar">
         <div class="adherence-bar__label">
           Adhärenz: {{ result.adherenceStats.adherencePercent | number:'1.0-0' }}%
           ({{ result.adherenceStats.totalCompleted }}/{{ result.adherenceStats.totalPlanned }} Sessions)
         </div>
         <div class="adherence-bar__track">
-          <div
-            class="adherence-bar__fill"
-            [style.width.%]="result.adherenceStats.adherencePercent"
-          ></div>
+          <div class="adherence-bar__fill"
+               [style.width.%]="result.adherenceStats.adherencePercent"></div>
         </div>
       </div>
 
       <div class="result-card__actions">
         <a routerLink="/dashboard" class="btn btn--secondary">Zum Dashboard</a>
-        <a routerLink="/history" class="btn btn--primary">Trainingshistorie</a>
+        <a routerLink="/history"   class="btn btn--primary">Trainingshistorie</a>
       </div>
     </div>
   </ng-container>
 
-  <!-- Form (hidden once result is shown) -->
+  <!-- ══ FORMULAR ══ -->
   <ng-container *ngIf="!result">
-    <div class="feedback-header">
-      <h1 class="feedback-header__title">Trainingsfeedback</h1>
-      <p class="feedback-header__sub">Bewerte deine heutige Einheit — die KI passt deinen Plan an.</p>
+
+    <div class="page-header">
+      <h1 class="page-header__title">Trainingsfeedback</h1>
+      <p class="page-header__sub">Bewerte deine heutige Einheit — die KI passt deinen Plan an.</p>
     </div>
 
     <div *ngIf="errorMessage" class="alert alert--error">⚠ {{ errorMessage }}</div>
@@ -94,81 +93,77 @@
     <ng-container *ngIf="!isLoadingPlan">
       <form (ngSubmit)="onSubmit()" #fbForm="ngForm">
 
-        <!-- Session RPE -->
+        <!-- Session-RPE -->
         <div class="card">
           <h2 class="card__title">Session-RPE (Gesamtbewertung)</h2>
           <p class="card__sub">Wie anstrengend war die gesamte Einheit?</p>
 
           <div class="rpe-grid">
-            <button
-              *ngFor="let n of [1,2,3,4,5,6,7,8,9,10]"
-              type="button"
-              class="rpe-btn"
-              [class.rpe-btn--active]="sessionRpe === n"
-              [ngClass]="sessionRpe === n ? rpeColor(n) : ''"
-              (click)="selectSessionRpe(n)"
-            >{{ n }}</button>
+            <button *ngFor="let n of [1,2,3,4,5,6,7,8,9,10]"
+                    type="button"
+                    class="rpe-btn"
+                    [class.rpe-btn--active]="sessionRpe === n"
+                    [ngClass]="sessionRpe === n ? rpeColor(n) : ''"
+                    (click)="selectSessionRpe(n)">{{ n }}</button>
           </div>
 
-          <div class="rpe-selected-label">
+          <div class="rpe-label-row">
             <span class="rpe-label-badge" [ngClass]="rpeColor(sessionRpe)">
               RPE {{ sessionRpe }} — {{ rpeLabels[sessionRpe] }}
             </span>
           </div>
         </div>
 
-        <!-- User Note -->
+        <!-- Notiz -->
         <div class="card">
           <h2 class="card__title">Notiz (optional)</h2>
-          <textarea
-            class="form-textarea"
-            [(ngModel)]="userNote"
-            name="userNote"
-            rows="2"
-            placeholder="z.B. Bankdrücken war heute sehr schwer im letzten Satz …"
-          ></textarea>
+          <textarea class="form-textarea"
+                    [(ngModel)]="userNote"
+                    name="userNote"
+                    rows="2"
+                    placeholder="z.B. Bankdrücken war heute sehr schwer im letzten Satz …"></textarea>
         </div>
 
-        <!-- Per-exercise feedback -->
+        <!-- Übungsfeedback -->
         <div class="card" *ngIf="exerciseFeedbacks.length > 0">
           <h2 class="card__title">Übungsfeedback</h2>
 
-          <div class="ex-feedback-list">
-            <div *ngFor="let ef of exerciseFeedbacks; let i = index" class="ex-feedback-row">
+          <div class="ex-list">
+            <div *ngFor="let ef of exerciseFeedbacks; let i = index" class="ex-row">
 
-              <div class="ex-feedback-row__name">{{ ef.exerciseName }}</div>
+              <div class="ex-row__name">{{ ef.exerciseName }}</div>
 
-              <!-- RPE per exercise -->
-              <div class="ex-feedback-row__rpe">
+              <div class="ex-row__rpe">
                 <label class="form-label">RPE</label>
                 <div class="rpe-grid rpe-grid--sm">
-                  <button
-                    *ngFor="let n of [1,2,3,4,5,6,7,8,9,10]"
-                    type="button"
-                    class="rpe-btn rpe-btn--sm"
-                    [class.rpe-btn--active]="ef.exerciseRpe === n"
-                    (click)="selectExerciseRpe(i, n)"
-                  >{{ n }}</button>
+                  <button *ngFor="let n of [1,2,3,4,5,6,7,8,9,10]"
+                          type="button"
+                          class="rpe-btn rpe-btn--sm"
+                          [class.rpe-btn--active]="ef.exerciseRpe === n"
+                          (click)="selectExerciseRpe(i, n)">{{ n }}</button>
                 </div>
               </div>
 
-              <!-- Sets / Reps / Weight -->
-              <div class="ex-feedback-row__fields">
+              <div class="ex-row__fields">
                 <div class="form-group">
                   <label class="form-label">Sätze</label>
-                  <input class="form-input" type="number" [(ngModel)]="ef.setsCompleted" [name]="'sc_' + i" min="0" />
+                  <input class="form-input" type="number" [(ngModel)]="ef.setsCompleted"
+                         [name]="'sc_' + i" min="0" />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Wdh</label>
-                  <input class="form-input" type="number" [(ngModel)]="ef.repsCompleted" [name]="'rc_' + i" min="0" />
+                  <input class="form-input" type="number" [(ngModel)]="ef.repsCompleted"
+                         [name]="'rc_' + i" min="0" />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Gewicht (kg)</label>
-                  <input class="form-input" type="number" [(ngModel)]="ef.weightUsed" [name]="'wu_' + i" min="0" step="0.5" />
+                  <input class="form-input" type="number" [(ngModel)]="ef.weightUsed"
+                         [name]="'wu_' + i" min="0" step="0.5" />
                 </div>
                 <div class="form-group form-group--wide">
                   <label class="form-label">Notiz</label>
-                  <input class="form-input" type="text" [(ngModel)]="ef.note" [name]="'note_' + i" placeholder="Optional …" />
+                  <input class="form-input" type="text" [(ngModel)]="ef.note"
+                         [name]="'note_' + i" placeholder="Optional …" />
                 </div>
               </div>
 
@@ -176,8 +171,8 @@
           </div>
         </div>
 
-        <!-- Submit -->
-        <div class="feedback-actions">
+        <!-- Absenden -->
+        <div class="form-actions">
           <a routerLink="/dashboard" class="btn btn--secondary">Abbrechen</a>
           <button type="submit" class="btn btn--primary" [disabled]="isSubmitting">
             <span *ngIf="!isSubmitting">Feedback absenden</span>
@@ -188,5 +183,4 @@
       </form>
     </ng-container>
   </ng-container>
-
 </div>

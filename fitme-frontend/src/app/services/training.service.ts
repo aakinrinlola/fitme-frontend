@@ -14,14 +14,17 @@ import {
   UserProfile
 } from '../models/training.model';
 
-/**
- * Response from POST /api/training-plans/generate.
- * The backend saves the plan and returns its metadata (same shape as manual creation).
- */
 export interface GeneratePlanResponse {
   id: number;
   planName: string;
   exerciseCount: number;
+  message: string;
+}
+
+export interface SetStatusResponse {
+  id: number;
+  active: boolean;
+  activeUntil: string | null;
   message: string;
 }
 
@@ -44,10 +47,23 @@ export class TrainingService {
     return this.http.get<TrainingPlanDetail>(`${this.baseUrl}/training-plans/${planId}`);
   }
 
-  // ── AI Plan Generation ─────────────────────────────────────────
-  // POST /api/training-plans/generate
-  // Backend receives GeneratePlanRequest {planName, userPrompt, fitnessGoal?, daysPerWeek?, focusMuscles?, experienceLevel?},
-  // generates the plan via AI, saves it, and returns {id, planName, exerciseCount, message}.
+  /**
+   * Ändert den Aktiv-Status eines Plans.
+   * PATCH /api/training-plans/{planId}/status
+   * Body: { active: boolean }
+   */
+  setActiveStatus(planId: number, active: boolean): Observable<SetStatusResponse> {
+    return this.http.patch<SetStatusResponse>(
+      `${this.baseUrl}/training-plans/${planId}/status`,
+      { active }
+    );
+  }
+
+  deletePlan(planId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/training-plans/${planId}`);
+  }
+
+  // ── AI Plan Generation ──────────────────────────────────────────
   generatePlanWithAi(request: GeneratePlanRequest): Observable<GeneratePlanResponse> {
     return this.http.post<GeneratePlanResponse>(
       `${this.baseUrl}/training-plans/generate`,

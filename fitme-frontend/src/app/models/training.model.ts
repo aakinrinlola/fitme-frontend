@@ -13,7 +13,6 @@ export interface CreateTrainingPlanRequest {
   exercises: ExerciseInput[];
 }
 
-/** KI-Plan-Generierung — Feldnamen müssen exakt zum Backend-DTO passen */
 export interface GeneratePlanRequest {
   planName: string;
   userPrompt: string;
@@ -28,6 +27,8 @@ export interface TrainingPlanSummary {
   planName: string;
   exerciseCount: number;
   active: boolean;
+  /** ISO-Datetime-String: Plan ist aktiv bis zu diesem Zeitpunkt */
+  activeUntil?: string | null;
 }
 
 export interface PlannedExercise {
@@ -39,7 +40,6 @@ export interface PlannedExercise {
   restSeconds: number;
   targetRpe: number;
   order: number;
-  /** Trainingstag-Label (z.B. "Tag A", "Tag B"). Leer-String bei manuellen Plänen. */
   trainingDay: string;
 }
 
@@ -48,10 +48,11 @@ export interface TrainingPlanDetail {
   planName: string;
   description: string;
   active: boolean;
+  /** ISO-Datetime-String: Plan ist aktiv bis zu diesem Zeitpunkt */
+  activeUntil?: string | null;
   exercises: PlannedExercise[];
 }
 
-/** Gruppierte Ansicht eines Trainingstages für das UI */
 export interface TrainingDayGroup {
   dayName: string;
   exercises: PlannedExercise[];

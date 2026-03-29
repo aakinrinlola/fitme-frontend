@@ -32,7 +32,6 @@ export class Dashboard implements OnInit {
   loadPlans(): void {
     this.isLoading = true;
     this.errorMessage = null;
-
     this.trainingService.getMyPlans().subscribe({
       next: plans => {
         this.plans = plans;
@@ -43,6 +42,16 @@ export class Dashboard implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  /**
+   * Berechnet die verbleibenden Tage bis zum Ablauf eines Plans.
+   * Negativer Wert = bereits abgelaufen.
+   */
+  getRemainingDays(activeUntil: string | null | undefined): number {
+    if (!activeUntil) return 999;
+    const diffMs = new Date(activeUntil).getTime() - Date.now();
+    return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   }
 
   logout(): void {

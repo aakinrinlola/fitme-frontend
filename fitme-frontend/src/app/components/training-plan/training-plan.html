@@ -1,40 +1,110 @@
 <div class="tp-page">
 
+  <!-- ── Delete-Modal ────────────────────────────────────────────── -->
+  <div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="cancelDelete()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__icon">🗑️</div>
+      <h3 class="modal__title">Trainingsplan löschen?</h3>
+      <p class="modal__body">
+        <strong>{{ plan?.planName }}</strong> wird endgültig gelöscht.<br>
+        Alle Übungen und Feedback-Daten gehen verloren.<br>
+        Diese Aktion kann nicht rückgängig gemacht werden.
+      </p>
+      <div class="modal__actions">
+        <button class="btn btn--secondary" (click)="cancelDelete()" [disabled]="isDeleting">Abbrechen</button>
+        <button class="btn btn--danger"    (click)="confirmDelete()" [disabled]="isDeleting">
+          <span *ngIf="!isDeleting">Endgültig löschen</span>
+          <span *ngIf="isDeleting" class="spinner"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Back ────────────────────────────────────────────────────── -->
   <div class="tp-page__back">
     <a routerLink="/dashboard" class="back-link">← Zurück zum Dashboard</a>
   </div>
 
+  <!-- Loading / Error -->
   <div *ngIf="isLoading" class="loading-row">
-    <span class="spinner"></span>
+    <span class="spinner spinner--dark"></span>
     <span>Lade Trainingsplan…</span>
   </div>
+  <div *ngIf="errorMessage && !isLoading" class="alert alert--error">⚠ {{ errorMessage }}</div>
 
-  <div *ngIf="errorMessage && !isLoading" class="alert alert--error">{{ errorMessage }}</div>
+  <ng-container *ngIf="!isLoading && plan">
 
-  <ng-container *ngIf="!isLoading && !errorMessage && plan">
-
-    <!-- Header -->
+    <!-- ── Header ──────────────────────────────────────────────────── -->
     <div class="tp-header">
       <div class="tp-header__left">
-        <h1 class="tp-header__title">{{ plan.planName }}</h1>
-        <p *ngIf="plan.description" class="tp-header__desc">{{ plan.description }}</p>
-        <div class="tp-header__badges">
-          <span class="badge" [class.badge--active]="plan.active" [class.badge--inactive]="!plan.active">
-            {{ plan.active ? 'Aktiv' : 'Inaktiv' }}
+        <!-- Status-Badges -->
+        <div class="tp-header__meta">
+          <span class="status-badge"
+                [class.status-badge--active]="plan.active"
+                [class.status-badge--inactive]="!plan.active">
+            {{ plan.active ? '● Aktiv' : '● Inaktiv' }}
           </span>
           <span class="badge badge--days" *ngIf="isMultiDayPlan">
             🗓 {{ dayGroups.length }} Trainingstage
           </span>
         </div>
+
+        <h1 class="tp-header__title">{{ plan.planName }}</h1>
+        <p *ngIf="plan.description" class="tp-header__desc">{{ plan.description }}</p>
+
+        <!-- Ablaufdatum-Info -->
+        <div class="active-until" *ngIf="plan.activeUntil">
+          <ng-container *ngIf="plan.active">
+            <ng-container *ngIf="(getActiveDaysRemaining() ?? 0) > 0">
+              <span class="active-until__text active-until__text--ok">
+                ⏱ Aktiv noch {{ getActiveDaysRemaining() }} Tage (bis {{ formatActiveUntil() }})
+              </span>
+            </ng-container>
+            <ng-container *ngIf="(getActiveDaysRemaining() ?? 1) <= 0">
+              <span class="active-until__text active-until__text--expired">
+                ⚠ Abgelaufen — bitte reaktivieren
+              </span>
+            </ng-container>
+          </ng-container>
+          <ng-container *ngIf="!plan.active">
+            <span class="active-until__text active-until__text--inactive">
+              ℹ Inaktiv — letzte Aktivierung gültig bis {{ formatActiveUntil() }}
+            </span>
+          </ng-container>
+        </div>
       </div>
+
+      <!-- Aktions-Buttons -->
       <div class="tp-header__actions">
-        <a [routerLink]="['/feedback', planId]" class="btn btn--primary">Feedback geben</a>
+        <!-- Feedback — direkte Navigation zu /feedback/:planId -->
+        <a [routerLink]="['/feedback', planId]" class="btn btn--primary">
+          💬 Feedback geben
+        </a>
+
+        <!-- Status-Toggle -->
+        <button class="btn"
+                [class.btn--activate]="!plan.active"
+                [class.btn--deactivate]="plan.active"
+                (click)="toggleActiveStatus()"
+                [disabled]="isTogglingStatus">
+          <span *ngIf="!isTogglingStatus">
+            {{ plan.active ? '⏸ Deaktivieren' : '▶ Aktivieren' }}
+          </span>
+          <span *ngIf="isTogglingStatus" class="spinner spinner--sm"></span>
+        </button>
+
+        <!-- Löschen -->
+        <button class="btn btn--danger-outline" (click)="openDeleteConfirm()">
+          🗑 Löschen
+        </button>
       </div>
     </div>
 
-    <!-- ══ MEHRTÄGIGE ANSICHT (KI-generierter Plan) ══ -->
-    <ng-container *ngIf="isMultiDayPlan">
+    <!-- Erfolgsmeldung -->
+    <div *ngIf="successMessage" class="alert alert--success">✓ {{ successMessage }}</div>
 
+    <!-- ── MEHRTÄGIGE ANSICHT ──────────────────────────────────────── -->
+    <ng-container *ngIf="isMultiDayPlan">
       <div class="day-overview">
         <div *ngFor="let group of dayGroups; let i = index"
              class="day-chip"
@@ -42,32 +112,20 @@
              [class.day-chip--b]="i === 1"
              [class.day-chip--c]="i === 2"
              [class.day-chip--d]="i === 3">
-          {{ group.dayName }}
+          <span class="day-chip__name">{{ group.dayName }}</span>
           <span class="day-chip__count">{{ group.exercises.length }} Übungen</span>
         </div>
       </div>
 
       <div *ngFor="let group of dayGroups; let i = index" class="day-card" [ngClass]="dayColorClass(i)">
-
-        <!-- Tages-Header -->
         <div class="day-card__header">
-          <div class="day-card__label">{{ group.dayName }}</div>
-          <div class="day-card__count">{{ group.exercises.length }} Übungen</div>
+          <span class="day-card__label">{{ group.dayName }}</span>
+          <span class="day-card__count">{{ group.exercises.length }} Übungen</span>
         </div>
-
-        <!-- Übungstabelle -->
         <div class="exercise-table-wrap">
           <table class="exercise-table">
             <thead>
-            <tr>
-              <th>#</th>
-              <th>Übung</th>
-              <th>Sätze</th>
-              <th>Wdh</th>
-              <th>Gewicht</th>
-              <th>Pause</th>
-              <th>RPE</th>
-            </tr>
+            <tr><th>#</th><th>Übung</th><th>Sätze</th><th>Wdh</th><th>Gewicht</th><th>Pause</th><th>RPE</th></tr>
             </thead>
             <tbody>
             <tr *ngFor="let ex of group.exercises; let j = index">
@@ -75,45 +133,29 @@
               <td class="td--name">{{ ex.exerciseName }}</td>
               <td class="td--center">{{ ex.sets }}</td>
               <td class="td--center">{{ ex.reps }}</td>
-              <td class="td--center">{{ ex.weightKg }} kg</td>
+              <td class="td--center">{{ ex.weightKg > 0 ? ex.weightKg + ' kg' : 'KG' }}</td>
               <td class="td--center">{{ formatRest(ex.restSeconds) }}</td>
-              <td class="td--center">
-                <span class="rpe-badge">{{ ex.targetRpe }}</span>
-              </td>
+              <td class="td--center"><span class="rpe-badge">{{ ex.targetRpe }}</span></td>
             </tr>
             </tbody>
           </table>
         </div>
-
       </div>
 
-      <!-- Gesamtzahl -->
       <div class="tp-summary">
-        <span class="tp-summary__text">
-          Gesamt: <strong>{{ plan.exercises.length }}</strong> Übungen über
-          <strong>{{ dayGroups.length }}</strong> Trainingstage
-        </span>
+        Gesamt: <strong>{{ plan.exercises.length }}</strong> Übungen über
+        <strong>{{ dayGroups.length }}</strong> Trainingstage
       </div>
-
     </ng-container>
 
-    <!-- ══ FLACHE ANSICHT (manuell erstellter Plan) ══ -->
+    <!-- ── FLACHE ANSICHT (manuell) ───────────────────────────────── -->
     <ng-container *ngIf="!isMultiDayPlan">
       <div class="card">
-        <h2 class="card__title">Übungen ({{ plan.exercises.length }})</h2>
-
+        <div class="card__title">Übungen ({{ plan.exercises.length }})</div>
         <div class="exercise-table-wrap">
           <table class="exercise-table">
             <thead>
-            <tr>
-              <th>#</th>
-              <th>Übung</th>
-              <th>Sätze</th>
-              <th>Wdh</th>
-              <th>Gewicht</th>
-              <th>Pause</th>
-              <th>Ziel-RPE</th>
-            </tr>
+            <tr><th>#</th><th>Übung</th><th>Sätze</th><th>Wdh</th><th>Gewicht</th><th>Pause</th><th>Ziel-RPE</th></tr>
             </thead>
             <tbody>
             <tr *ngFor="let ex of plan.exercises">
@@ -121,11 +163,9 @@
               <td class="td--name">{{ ex.exerciseName }}</td>
               <td class="td--center">{{ ex.sets }}</td>
               <td class="td--center">{{ ex.reps }}</td>
-              <td class="td--center">{{ ex.weightKg }} kg</td>
+              <td class="td--center">{{ ex.weightKg > 0 ? ex.weightKg + ' kg' : 'KG' }}</td>
               <td class="td--center">{{ formatRest(ex.restSeconds) }}</td>
-              <td class="td--center">
-                <span class="rpe-badge">{{ ex.targetRpe }}</span>
-              </td>
+              <td class="td--center"><span class="rpe-badge">{{ ex.targetRpe }}</span></td>
             </tr>
             </tbody>
           </table>
@@ -134,5 +174,4 @@
     </ng-container>
 
   </ng-container>
-
 </div>

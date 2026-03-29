@@ -1,15 +1,47 @@
+/* ================================================================
+   App layout — FitMe light design system
+   ================================================================ */
+
 :root {
-  --bg: #000;          /* Startseite / Background schwarz */
-  --panel: #15171b;    /* Navbar grau */
-  --panel2: #1b1e24;   /* hover/active background */
-  --border: rgba(255, 255, 255, 0.10);
+  /* Surface */
+  --bg:      #f5f7fb;
+  --panel:   #ffffff;
+  --panel2:  #f0f4f8;
+  --surface: #ffffff;
 
-  --text: rgba(255, 255, 255, 0.92);
-  --muted: rgba(255, 255, 255, 0.60);
+  /* Border */
+  --border:  #e5e7eb;
+  --border-light: rgba(0, 0, 0, 0.06);
 
-  --accent: #7ab8ff;
-  --sidebar-w: 260px;
-  --radius: 14px;
+  /* Text */
+  --text:    #111827;
+  --muted:   #6b7280;
+  --subtle:  #9ca3af;
+
+  /* Accent (indigo) */
+  --accent:       #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-light: rgba(99, 102, 241, 0.10);
+  --accent-text:  #6366f1;
+
+  /* Status */
+  --success:      #10b981;
+  --success-light: rgba(16, 185, 129, 0.10);
+  --danger:       #ef4444;
+  --danger-hover: #dc2626;
+  --danger-light: rgba(239, 68, 68, 0.10);
+
+  /* Layout */
+  --sidebar-w: 240px;
+  --radius:    12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow:     0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md:  0 4px 6px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg:  0 10px 15px rgba(0, 0, 0, 0.06), 0 4px 6px rgba(0, 0, 0, 0.04);
 }
 
 html, body {
@@ -17,130 +49,149 @@ html, body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 * { box-sizing: border-box; }
 
-/* ===== Layout wrapper prevents overlap ===== */
+/* ── App layout ─────────────────────────────────────────────────── */
 .app-layout {
   min-height: 100vh;
   display: flex;
   background: var(--bg);
 }
 
-/* ===== Sidebar ===== */
+/* ── Sidebar ────────────────────────────────────────────────────── */
 .sidebar {
   width: var(--sidebar-w);
   background: var(--panel);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  padding: 18px 16px;
+  padding: 20px 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .sidebar__top {
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding-bottom: 18px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
 }
 
-/* Brand block */
+/* Brand */
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .brand__logo {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  background: rgba(122, 184, 255, 0.14);
-  border: 1px solid rgba(122, 184, 255, 0.25);
-  color: var(--text);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  background: var(--accent);
+  color: #fff;
+  flex-shrink: 0;
 }
 
 .brand__name {
   font-weight: 800;
-  letter-spacing: 0.20em;
-  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  font-size: 0.9rem;
+  color: var(--text);
 }
 
 .brand__sub {
-  margin-top: 2px;
-  font-size: 0.82rem;
+  margin-top: 1px;
+  font-size: 0.75rem;
   color: var(--muted);
+  font-weight: 500;
 }
 
-/* Navigation links */
+/* Nav */
 .sidebar__nav {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px 0;
-  flex: 1; /* pushes bottom section down */
+  gap: 2px;
+  padding: 14px 0;
+  flex: 1;
+}
+
+.sidebar__divider {
+  height: 1px;
+  background: var(--border);
+  margin: 6px 0;
 }
 
 .sidebar__nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   text-decoration: none;
   color: var(--muted);
-  padding: 12px 12px;
-  border-radius: 12px;
-  border: 1px solid transparent;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: var(--panel2);
+    color: var(--text);
+  }
+
+  &.active {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-weight: 600;
+  }
 }
 
-.sidebar__nav a:hover {
-  background: var(--panel2);
-  color: var(--text);
-  border-color: rgba(255,255,255,0.08);
-}
-
-.sidebar__nav a.active {
-  background: rgba(122, 184, 255, 0.14);
-  border-color: rgba(122, 184, 255, 0.28);
-  color: var(--text);
-}
-
-/* Bottom section */
+/* Bottom */
 .sidebar__bottom {
   padding-top: 14px;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .sidebar__hint {
-  font-size: 0.85rem;
-  color: var(--muted);
+  font-size: 0.8rem;
+  color: var(--subtle);
 }
 
-/* ===== Page / Content ===== */
+.sidebar__user {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Page / Content ─────────────────────────────────────────────── */
 .page {
   flex: 1;
   background: var(--bg);
-  padding: 24px;
+  padding: 28px 32px;
   overflow: auto;
+  min-height: 100vh;
 }
 
 .page__inner {
-  max-width: 1200px;
+  max-width: 1100px;
 }
 
-/* Optional helper card for your pages */
-.card {
-  background: #0b0d10;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: var(--radius);
-  padding: 18px;
-}
-
-/* ===== Mobile ===== */
+/* ── Mobile ─────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .app-layout {
     flex-direction: column;
@@ -148,28 +199,23 @@ html, body {
 
   .sidebar {
     width: 100%;
+    height: auto;
+    position: relative;
     flex-direction: row;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
+    padding: 12px 16px;
+    flex-wrap: wrap;
   }
 
-  .sidebar__top {
-    border: none;
-    padding: 0;
-  }
-
+  .sidebar__top { border: none; padding: 0; margin: 0; }
   .sidebar__nav {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 4px;
     padding: 0;
   }
+  .sidebar__bottom { display: none; }
 
-  .sidebar__bottom {
-    display: none;
-  }
-
-  .page {
-    padding: 16px;
-  }
+  .page { padding: 16px; }
 }
