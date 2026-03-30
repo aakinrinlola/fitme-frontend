@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import {CommonModule, formatDate} from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { TrainingService } from '../../services/training.service';
@@ -58,5 +58,11 @@ export class Dashboard implements OnInit {
     this.authService.logout();
   }
 
-  protected readonly formatDate = formatDate;
+  formatDate(dateStr?: string | null): string {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('de-DE', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  }
 }
