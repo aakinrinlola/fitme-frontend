@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {CommonModule, formatDate} from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { TrainingService } from '../../services/training.service';
@@ -57,4 +57,6 @@ export class Dashboard implements OnInit {
   logout(): void {
     this.authService.logout();
   }
+
+  protected readonly formatDate = formatDate;
 }

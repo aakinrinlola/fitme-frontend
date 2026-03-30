@@ -27,8 +27,11 @@ export interface TrainingPlanSummary {
   planName: string;
   exerciseCount: number;
   active: boolean;
-  /** ISO-Datetime-String: Plan ist aktiv bis zu diesem Zeitpunkt */
   activeUntil?: string | null;
+  currentWeek: number;
+  planDurationWeeks: number;
+  feedbackAllowedThisWeek: boolean;
+  nextFeedbackAvailableAt?: string | null;
 }
 
 export interface PlannedExercise {
@@ -48,14 +51,27 @@ export interface TrainingPlanDetail {
   planName: string;
   description: string;
   active: boolean;
-  /** ISO-Datetime-String: Plan ist aktiv bis zu diesem Zeitpunkt */
   activeUntil?: string | null;
+  planDurationWeeks: number;
+  currentWeek: number;
+  feedbackAllowedThisWeek: boolean;
+  nextFeedbackAvailableAt?: string | null;
   exercises: PlannedExercise[];
 }
 
 export interface TrainingDayGroup {
   dayName: string;
   exercises: PlannedExercise[];
+}
+
+export interface FeedbackAvailability {
+  planId: number;
+  isActive: boolean;
+  allowed: boolean;
+  reason: string;
+  currentWeek: number;
+  planDurationWeeks: number;
+  nextFeedbackAvailableAt?: string | null;
 }
 
 export interface ExerciseFeedback {

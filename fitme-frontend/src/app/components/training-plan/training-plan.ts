@@ -14,20 +14,16 @@ import { TrainingPlanDetail, TrainingDayGroup } from '../../models/training.mode
 export class TrainingPlan implements OnInit {
   plan: TrainingPlanDetail | null = null;
   planId!: number;
-  isLoading     = true;
+  isLoading      = true;
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
-  /** Gruppierende Ansicht für mehrtägige KI-Pläne */
   dayGroups: TrainingDayGroup[] = [];
   isMultiDayPlan = false;
 
-  /** Delete state */
   showDeleteConfirm = false;
   isDeleting        = false;
-
-  /** Status-Toggle state */
-  isTogglingStatus = false;
+  isTogglingStatus  = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -51,31 +47,25 @@ export class TrainingPlan implements OnInit {
           (this.dayGroups.length === 1 && this.dayGroups[0].dayName !== '');
         this.isLoading = false;
       },
-      error: () => {
-        this.errorMessage = 'Trainingsplan konnte nicht geladen werden.';
-        this.isLoading = false;
-      }
+      error: () => { this.errorMessage = 'Trainingsplan konnte nicht geladen werden.'; this.isLoading = false; }
     });
   }
 
   // ── Status-Toggle ─────────────────────────────────────────────────
-
   toggleActiveStatus(): void {
     if (!this.plan || this.isTogglingStatus) return;
-
     const newStatus = !this.plan.active;
     this.isTogglingStatus = true;
     this.errorMessage = null;
     this.successMessage = null;
 
     this.trainingService.setActiveStatus(this.planId, newStatus).subscribe({
-      next: (res) => {
+      next: res => {
         if (this.plan) {
           this.plan = { ...this.plan, active: res.active, activeUntil: res.activeUntil };
         }
         this.successMessage = res.message;
         this.isTogglingStatus = false;
-        // Erfolgsmeldung nach 3 Sekunden ausblenden
         setTimeout(() => { this.successMessage = null; }, 3000);
       },
       error: () => {
@@ -86,10 +76,8 @@ export class TrainingPlan implements OnInit {
   }
 
   // ── Delete ───────────────────────────────────────────────────────
-
   openDeleteConfirm(): void  { this.showDeleteConfirm = true; }
   cancelDelete(): void       { if (!this.isDeleting) this.showDeleteConfirm = false; }
-
   confirmDelete(): void {
     this.isDeleting = true;
     this.trainingService.deletePlan(this.planId).subscribe({
@@ -102,24 +90,23 @@ export class TrainingPlan implements OnInit {
     });
   }
 
-  // ── Hilfsmethoden ────────────────────────────────────────────────
-
-  /**
-   * Gibt die verbleibenden aktiven Tage zurück.
-   * Null = kein Ablaufdatum gesetzt, negativ = bereits abgelaufen.
-   */
+  // ── Helpers ──────────────────────────────────────────────────────
   getActiveDaysRemaining(): number | null {
     if (!this.plan?.activeUntil) return null;
-    const until = new Date(this.plan.activeUntil);
-    const diffMs = until.getTime() - Date.now();
-    return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    return Math.ceil((new Date(this.plan.activeUntil).getTime() - Date.now()) / 86400000);
   }
 
-  /** Formatiert das activeUntil-Datum für die Anzeige */
   formatActiveUntil(): string {
     if (!this.plan?.activeUntil) return '';
     return new Date(this.plan.activeUntil).toLocaleDateString('de-DE', {
       day: '2-digit', month: '2-digit', year: 'numeric'
+    });
+  }
+
+  formatNextFeedback(): string {
+    if (!this.plan?.nextFeedbackAvailableAt) return '';
+    return new Date(this.plan.nextFeedbackAvailableAt).toLocaleDateString('de-DE', {
+      day: '2-digit', month: '2-digit'
     });
   }
 
@@ -134,11 +121,10 @@ export class TrainingPlan implements OnInit {
   }
 
   formatRest(seconds: number): string {
-    if (seconds >= 60) return `${Math.floor(seconds / 60)} min`;
-    return `${seconds}s`;
+    return seconds >= 60 ? `${Math.floor(seconds / 60)} min` : `${seconds}s`;
   }
 
-  dayColorClass(index: number): string {
-    return ['day-card--a', 'day-card--b', 'day-card--c', 'day-card--d'][index % 4];
+  dayColorClass(i: number): string {
+    return ['day-card--a', 'day-card--b', 'day-card--c', 'day-card--d'][i % 4];
   }
 }

@@ -10,7 +10,7 @@
     </div>
     <div class="welcome-banner__actions">
       <a routerLink="/training-plan/create" class="btn btn--primary">+ Neuer Plan</a>
-      <a routerLink="/profile" class="btn btn--secondary">Profil</a>
+      <a routerLink="/profile"              class="btn btn--secondary">Profil</a>
     </div>
   </div>
 
@@ -38,13 +38,12 @@
   <div class="section">
     <div class="section__header">
       <h2 class="section__title">Meine Trainingspläne</h2>
-      <a routerLink="/history" class="btn btn--secondary btn--sm">Trainingshistorie</a>
+      <a routerLink="/history" class="btn btn--secondary btn--sm">Verlauf</a>
     </div>
 
     <div *ngIf="isLoading" class="loading-row">
       <span class="spinner"></span><span>Lade Pläne…</span>
     </div>
-
     <div *ngIf="errorMessage && !isLoading" class="alert alert--error">{{ errorMessage }}</div>
 
     <ng-container *ngIf="!isLoading && !errorMessage">
@@ -56,9 +55,9 @@
 
       <div *ngIf="plans.length > 0" class="plan-grid">
         <div *ngFor="let plan of plans" class="plan-card">
+
           <div class="plan-card__header">
             <div class="plan-card__name">{{ plan.planName }}</div>
-            <!-- Status-Badge: Aktiv = grün, Inaktiv = grau -->
             <span class="status-badge"
                   [class.status-badge--active]="plan.active"
                   [class.status-badge--inactive]="!plan.active">
@@ -68,23 +67,44 @@
 
           <div class="plan-card__meta">
             <span>{{ plan.exerciseCount }} Übungen</span>
-            <!-- Ablaufdatum anzeigen -->
-            <span *ngIf="plan.activeUntil && plan.active" class="plan-card__until">
-              <span *ngIf="getRemainingDays(plan.activeUntil) > 0">
-                ⏱ noch {{ getRemainingDays(plan.activeUntil) }} Tage
-              </span>
-              <span *ngIf="getRemainingDays(plan.activeUntil) <= 0" class="plan-card__until--expired">
+
+            <!-- Wochenanzeige -->
+            <span class="plan-card__week" *ngIf="plan.active">
+              Woche {{ plan.currentWeek }} / {{ plan.planDurationWeeks }}
+            </span>
+
+            <!-- Ablaufdatum -->
+            <span *ngIf="plan.activeUntil && plan.active" class="plan-card__until"
+                  [class.plan-card__until--expired]="getRemainingDays(plan.activeUntil) <= 0">
+              <ng-container *ngIf="getRemainingDays(plan.activeUntil) > 0">
+                ⏱ noch {{ getRemainingDays(plan.activeUntil) }} Tage aktiv
+              </ng-container>
+              <ng-container *ngIf="getRemainingDays(plan.activeUntil) <= 0">
                 ⚠ Abgelaufen
-              </span>
+              </ng-container>
+            </span>
+
+            <!-- Feedback gesperrt -->
+            <span class="plan-card__feedback-locked"
+                  *ngIf="plan.active && !plan.feedbackAllowedThisWeek">
+              🔒 Feedback erst ab {{ formatDate(plan.nextFeedbackAvailableAt) }}
             </span>
           </div>
 
           <div class="plan-card__actions">
-            <!-- Details → /training-plan/:id -->
             <a [routerLink]="['/training-plan', plan.id]" class="btn btn--secondary btn--sm">Details</a>
-            <!-- Feedback → /feedback/:planId -->
-            <a [routerLink]="['/feedback', plan.id]" class="btn btn--primary btn--sm">Feedback</a>
+            <!-- Feedback-Button nur wenn Plan aktiv UND Feedback erlaubt -->
+            <a [routerLink]="['/feedback', plan.id]" class="btn btn--primary btn--sm"
+               *ngIf="plan.active && plan.feedbackAllowedThisWeek">
+              Feedback
+            </a>
+            <span class="btn btn--sm btn--secondary" style="opacity:0.5;cursor:not-allowed;"
+                  *ngIf="!plan.active || !plan.feedbackAllowedThisWeek"
+                  title="{{ !plan.active ? 'Plan inaktiv' : 'Feedback diese Woche bereits abgegeben' }}">
+              Feedback 🔒
+            </span>
           </div>
+
         </div>
       </div>
     </ng-container>
@@ -101,4 +121,5 @@
       <div class="quick-link-card__label">Profil bearbeiten</div>
     </a>
   </div>
+
 </div>
