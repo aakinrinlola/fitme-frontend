@@ -76,6 +76,7 @@
     color: #334155;
     background-color: transparent;
     border: 1px solid transparent;
+    cursor: pointer;
     transition:
       background-color 0.2s ease,
       color 0.2s ease,
@@ -112,6 +113,30 @@
       border-color: #4338ca;
       transform: translateX(2px);
     }
+  }
+}
+
+// Sidebar-Logout Button
+.sidebar__logout {
+  color: #dc2626 !important;
+  &:hover {
+    background-color: #fef2f2 !important;
+    border-color: #fecaca !important;
+    color: #b91c1c !important;
+  }
+}
+
+// Auth0 Login-Button (Sidebar)
+.sidebar__login-btn {
+  background-color: #4f46e5 !important;
+  color: #ffffff !important;
+  border-color: #4f46e5 !important;
+  text-align: center;
+  justify-content: center;
+  &:hover {
+    background-color: #4338ca !important;
+    border-color: #4338ca !important;
+    color: #ffffff !important;
   }
 }
 

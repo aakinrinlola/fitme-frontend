@@ -1,72 +1,185 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, Optional } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { Router } from '@angular/router';
+import { BehaviorSubject, Observable, tap, of, map, switchMap } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { AuthResponse, LoginRequest, RegisterRequest, RefreshTokenRequest, UserInfo } from '../models/auth.model';
+import {
+  AuthResponse, LoginRequest, RegisterRequest,
+  RefreshTokenRequest, UserInfo
+} from '../models/auth.model';
+import { AuthService as Auth0Service } from '@auth0/auth0-angular';
 
+/**
+ * Dual-Mode AuthService:
+ *
+ * mode='local'  → Eigene JWT-Auth (Login/Register über Backend-API)
+ * mode='auth0'  → Auth0 Universal Login (SDK managed)
+ *
+ * Alle Komponenten nutzen diesen Service — der Modus ist transparent.
+ */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly baseUrl = `${environment.apiUrl}/api/auth`;
   private readonly ACCESS_TOKEN_KEY = 'fitme_access_token';
   private readonly REFRESH_TOKEN_KEY = 'fitme_refresh_token';
   private readonly USER_KEY = 'fitme_user';
+  private readonly isAuth0 = environment.auth?.mode === 'auth0';
 
-  private currentUserSubject = new BehaviorSubject<UserInfo | null>(this.loadStoredUser());
+  private currentUserSubject = new BehaviorSubject<UserInfo | null>(
+    this.isAuth0 ? null : this.loadStoredUser()
+  );
   currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
-
-  register(request: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/register`, request).pipe(
-      tap(res => this.storeSession(res))
-    );
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    @Optional() @Inject(Auth0Service) private auth0: Auth0Service | null,
+  ) {
+    // Auth0-Modus: User-Info aus Auth0 SDK synchronisieren
+    if (this.isAuth0 && this.auth0) {
+      this.auth0.user$.subscribe(auth0User => {
+        if (auth0User) {
+          const userInfo: UserInfo = {
+            id: 0,  // wird vom Backend über /api/users/me geladen
+            username: auth0User.nickname || auth0User.name || '',
+            email: auth0User.email || '',
+            role: 'USER',
+            fitnessLevel: 'BEGINNER',
+            age: 0,
+            weightKg: 0,
+            heightCm: 0,
+            motivationText: null,
+          };
+          this.currentUserSubject.next(userInfo);
+        } else {
+          this.currentUserSubject.next(null);
+        }
+      });
+    }
   }
 
-  login(request: LoginRequest): Observable<AuthResponse> {
+  // ══════════════════════════════════════════════════════════════
+  // PUBLIC API — identisch für beide Modi
+  // ══════════════════════════════════════════════════════════════
+
+  /**
+   * Login.
+   * Local: HTTP POST → /api/auth/login
+   * Auth0: Redirect zu Auth0 Universal Login
+   */
+  login(request?: LoginRequest): Observable<AuthResponse> {
+    if (this.isAuth0 && this.auth0) {
+      this.auth0.loginWithRedirect();
+      // Gibt ein leeres Observable zurück — Auth0 übernimmt den Flow
+      return of({} as AuthResponse);
+    }
+
+    // Local Mode
     return this.http.post<AuthResponse>(`${this.baseUrl}/login`, request).pipe(
       tap(res => this.storeSession(res))
     );
   }
 
+  /**
+   * Registrierung.
+   * Local: HTTP POST → /api/auth/register
+   * Auth0: Redirect zu Auth0 Signup
+   */
+  register(request?: RegisterRequest): Observable<AuthResponse> {
+    if (this.isAuth0 && this.auth0) {
+      this.auth0.loginWithRedirect({
+        authorizationParams: { screen_hint: 'signup' }
+      });
+      return of({} as AuthResponse);
+    }
+
+    // Local Mode
+    return this.http.post<AuthResponse>(`${this.baseUrl}/register`, request).pipe(
+      tap(res => this.storeSession(res))
+    );
+  }
+
+  /**
+   * Token erneuern.
+   * Local: HTTP POST → /api/auth/refresh
+   * Auth0: SDK macht das automatisch
+   */
   refresh(request: RefreshTokenRequest): Observable<AuthResponse> {
+    if (this.isAuth0) {
+      return of({} as AuthResponse);
+    }
     return this.http.post<AuthResponse>(`${this.baseUrl}/refresh`, request).pipe(
       tap(res => this.storeSession(res))
     );
   }
 
+  /**
+   * Logout.
+   */
   logout(): void {
+    if (this.isAuth0 && this.auth0) {
+      this.auth0.logout({
+        logoutParams: {
+          returnTo: typeof window !== 'undefined' ? window.location.origin : ''
+        }
+      });
+      return;
+    }
+
+    // Local Mode
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
     this.currentUserSubject.next(null);
   }
 
-  getAccessToken(): string | null {
-    return localStorage.getItem(this.ACCESS_TOKEN_KEY);
-  }
-
-  getRefreshToken(): string | null {
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
-  }
-
+  /**
+   * Prüft ob User eingeloggt ist.
+   */
   isLoggedIn(): boolean {
-    const token = this.getAccessToken();
-
-    if (!token) {
-      return false;
+    if (this.isAuth0 && this.auth0) {
+      // Auth0: synchron prüfen über den aktuellen User-State
+      return this.currentUserSubject.value !== null;
     }
 
+    // Local Mode
+    const token = this.getAccessToken();
+    if (!token) return false;
     if (this.isTokenExpired(token)) {
       this.logout();
       return false;
     }
-
     return true;
+  }
+
+  /**
+   * Gibt den Auth0 isAuthenticated$ Observable zurück (für Guards).
+   * In Local-Mode: Observable basierend auf Token-Check.
+   */
+  isAuthenticated$(): Observable<boolean> {
+    if (this.isAuth0 && this.auth0) {
+      return this.auth0.isAuthenticated$;
+    }
+    return of(this.isLoggedIn());
+  }
+
+  getAccessToken(): string | null {
+    if (this.isAuth0) return null; // Auth0 SDK managed
+    return localStorage.getItem(this.ACCESS_TOKEN_KEY);
+  }
+
+  getRefreshToken(): string | null {
+    if (this.isAuth0) return null;
+    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
   }
 
   getCurrentUser(): UserInfo | null {
     return this.currentUserSubject.value;
   }
+
+  // ══════════════════════════════════════════════════════════════
+  // PRIVATE — Local JWT Mode
+  // ══════════════════════════════════════════════════════════════
 
   private storeSession(res: AuthResponse): void {
     localStorage.setItem(this.ACCESS_TOKEN_KEY, res.accessToken);
@@ -83,13 +196,7 @@ export class AuthService {
   private isTokenExpired(token: string): boolean {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      const exp = payload.exp;
-
-      if (!exp) {
-        return true;
-      }
-
-      return Date.now() >= exp * 1000;
+      return !payload.exp || Date.now() >= payload.exp * 1000;
     } catch {
       return true;
     }

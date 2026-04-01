@@ -9,14 +9,24 @@ import { History } from './components/history/history';
 import { Profile } from './components/profile/profile';
 
 import { authGuard, guestGuard } from './guards/auth.guard';
-import {TrainingPlanCreate} from './components/training-plan-create/training-plan-create';
+import { TrainingPlanCreate } from './components/training-plan-create/training-plan-create';
+import { environment } from '../environments/environment';
+
+/**
+ * Root-Redirect:
+ * Local-Mode  → /login  (User muss sich einloggen)
+ * Auth0-Mode  → /dashboard  (Auth0 Guard löst Login automatisch aus)
+ */
+const defaultRedirect = environment.auth?.mode === 'auth0' ? 'dashboard' : 'login';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: '', redirectTo: defaultRedirect, pathMatch: 'full' },
 
+  // Login/Register — nur im Local-Mode relevant
   { path: 'login', component: Login, canActivate: [guestGuard] },
   { path: 'register', component: Register, canActivate: [guestGuard] },
 
+  // Geschützte Routen
   { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
   { path: 'training-plan/create', component: TrainingPlanCreate, canActivate: [authGuard] },
   { path: 'training-plan/:id', component: TrainingPlan, canActivate: [authGuard] },
@@ -24,5 +34,5 @@ export const routes: Routes = [
   { path: 'history', component: History, canActivate: [authGuard] },
   { path: 'profile', component: Profile, canActivate: [authGuard] },
 
-  { path: '**', redirectTo: 'login' },
+  { path: '**', redirectTo: defaultRedirect },
 ];

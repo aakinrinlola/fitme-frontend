@@ -11,27 +11,27 @@
     </div>
 
     <nav class="sidebar__nav">
-<!--      &lt;!&ndash; Always visible &ndash;&gt;-->
-<!--      <a routerLink="/homepage"  routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Homepage</a>-->
-<!--      <a routerLink="/pricelist" routerLinkActive="active">Pricelist</a>-->
-<!--      <a routerLink="/aboutUs"   routerLinkActive="active">About Us</a>-->
-<!--      <a routerLink="/contact"   routerLinkActive="active">Contact</a>-->
-
-      <!-- Auth-only links -->
+      <!-- Auth-only links (eingeloggt) -->
       <ng-container *ngIf="isLoggedIn">
-        <div class="sidebar__divider"></div>
         <a routerLink="/dashboard"            routerLinkActive="active">Dashboard</a>
         <a routerLink="/training-plan/create" routerLinkActive="active">Neuer Plan</a>
-<!--        <a routerLink="/tpchat"               routerLinkActive="active">TPChat</a>-->
         <a routerLink="/history"              routerLinkActive="active">Verlauf</a>
         <a routerLink="/profile"              routerLinkActive="active">Profil</a>
+        <div class="sidebar__divider"></div>
+        <a class="sidebar__logout" (click)="logout()">Ausloggen</a>
       </ng-container>
 
-      <!-- Guest links -->
-      <ng-container *ngIf="!isLoggedIn">
+      <!-- Guest links — NUR im Local-Modus (Auth0 hat kein /login) -->
+      <ng-container *ngIf="!isLoggedIn && !isAuth0Mode">
         <div class="sidebar__divider"></div>
         <a routerLink="/login"    routerLinkActive="active">Login</a>
         <a routerLink="/register" routerLinkActive="active">Registrieren</a>
+      </ng-container>
+
+      <!-- Auth0-Modus: nicht eingeloggt → Login-Button -->
+      <ng-container *ngIf="!isLoggedIn && isAuth0Mode">
+        <div class="sidebar__divider"></div>
+        <a class="sidebar__login-btn" (click)="authService.login()">Anmelden</a>
       </ng-container>
     </nav>
 

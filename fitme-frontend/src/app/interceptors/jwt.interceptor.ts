@@ -4,6 +4,10 @@ import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 
+/**
+ * JWT-Interceptor — NUR im Local-Auth-Modus aktiv.
+ * Im Auth0-Modus wird stattdessen authHttpInterceptorFn verwendet (siehe app.config.ts).
+ */
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   const router = inject(Router);
