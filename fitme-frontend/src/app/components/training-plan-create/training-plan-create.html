@@ -9,142 +9,212 @@
     <p class="create-header__sub">Erstelle deinen Plan manuell oder lass die KI einen für dich generieren.</p>
   </div>
 
-  <!-- ── Modus-Toggle ──────────────────────────────────────────── -->
   <div class="mode-toggle">
-    <button
-      type="button"
-      class="mode-toggle__btn"
-      [class.mode-toggle__btn--active]="mode === 'manual'"
-      (click)="setMode('manual')"
-    >
-      ✏️ Manuell erstellen
-    </button>
-    <button
-      type="button"
-      class="mode-toggle__btn"
-      [class.mode-toggle__btn--active]="mode === 'ai'"
-      (click)="setMode('ai')"
-    >
-      🤖 Mit KI generieren
-    </button>
+    <button type="button" class="mode-toggle__btn"
+            [class.mode-toggle__btn--active]="mode === 'manual'"
+            (click)="setMode('manual')">✏️ Manuell erstellen</button>
+    <button type="button" class="mode-toggle__btn"
+            [class.mode-toggle__btn--active]="mode === 'ai'"
+            (click)="setMode('ai')">🤖 Mit KI generieren</button>
   </div>
 
   <div *ngIf="errorMessage"   class="alert alert--error">⚠ {{ errorMessage }}</div>
   <div *ngIf="successMessage" class="alert alert--success">✓ {{ successMessage }}</div>
 
-  <!-- ══════════════════════════════════════════════════════════════ -->
-  <!-- KI-MODUS                                                      -->
-  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- ══════════════════ KI-MODUS ══════════════════ -->
   <ng-container *ngIf="mode === 'ai'">
     <form (ngSubmit)="onGenerateSubmit()" #aiForm="ngForm" class="create-form">
 
-      <!-- Planname -->
+      <!-- 1. Plan-Name + Prompt -->
       <div class="card">
         <h2 class="card__title">🤖 KI-Trainingsplan generieren</h2>
-        <p class="card__sub">
-          Gib deinem Plan einen Namen und beschreibe, was die KI erstellen soll.
-        </p>
+        <p class="card__sub">Gib deinem Plan einen Namen und beschreibe was du trainieren möchtest.</p>
 
         <div class="form-group">
           <label class="form-label" for="aiPlanName">Planname *</label>
-          <input
-            id="aiPlanName"
-            class="form-input"
-            type="text"
-            [(ngModel)]="aiPlanName"
-            name="aiPlanName"
-            required
-            placeholder="z.B. Mein KI Push Day"
-          />
+          <input id="aiPlanName" class="form-input" type="text"
+                 [(ngModel)]="aiPlanName" name="aiPlanName"
+                 required placeholder="z.B. Mein Kraftplan"/>
         </div>
 
         <div class="form-group form-group--spaced">
           <label class="form-label" for="aiUserPrompt">Beschreibe deinen Wunsch *</label>
-
-          <textarea
-            id="aiUserPrompt"
-            class="form-textarea form-textarea--large"
-            [(ngModel)]="aiUserPrompt"
-            name="aiUserPrompt"
-            required
-            minlength="10"
-            rows="4"
-            placeholder="z.B. Ich möchte 3x pro Woche trainieren, bin Anfänger und möchte Muskeln aufbauen. Fokus auf Oberkörper und Beine."
-          ></textarea>
-
-          <div
-            class="field-error"
-            *ngIf="aiUserPrompt && aiUserPrompt.trim().length > 0 && aiUserPrompt.trim().length < 10"
-          >
-            Bitte gib mindestens 10 Zeichen ein.
-          </div>
+          <textarea id="aiUserPrompt" class="form-textarea form-textarea--large"
+                    [(ngModel)]="aiUserPrompt" name="aiUserPrompt"
+                    required minlength="10" rows="3"
+                    placeholder="z.B. 3x pro Woche, Anfänger, Muskelaufbau, Fokus auf Oberkörper …"></textarea>
         </div>
       </div>
 
-      <!-- Optionale Parameter -->
+      <!-- 2. Trainingsdauer (NEU) -->
       <div class="card">
-        <h2 class="card__title">Optionale Parameter</h2>
-        <p class="card__sub">Ergänze Details für einen besseren Plan (alle optional).</p>
+        <h2 class="card__title">⏱ Trainingsdauer pro Einheit</h2>
+        <p class="card__sub">Die KI passt Übungsanzahl und Pausen automatisch an.</p>
+        <div class="duration-grid">
+          <button *ngFor="let d of durationOptions"
+                  type="button"
+                  class="duration-btn"
+                  [class.duration-btn--active]="aiSessionDuration === d.value"
+                  (click)="aiSessionDuration = aiSessionDuration === d.value ? null : d.value">
+            {{ d.label }}
+          </button>
+          <button *ngIf="aiSessionDuration !== null"
+                  type="button"
+                  class="duration-btn duration-btn--clear"
+                  (click)="aiSessionDuration = null">✕ Keine Angabe</button>
+        </div>
+        <div class="duration-hint" *ngIf="aiSessionDuration !== null">
+          <span *ngIf="aiSessionDuration <= 30">🎯 Kompakt: 3 Compound-Übungen, kurze Pausen</span>
+          <span *ngIf="aiSessionDuration === 45">🎯 Effizient: 4 Übungen, 1 Isolation erlaubt</span>
+          <span *ngIf="aiSessionDuration === 60">🎯 Standard: volles Level-Volumen</span>
+          <span *ngIf="aiSessionDuration === 75">🎯 Ausführlich: Standard + 1 Zusatzübung</span>
+          <span *ngIf="aiSessionDuration >= 90">🎯 Maximal: volles Volumen + extra Sätze</span>
+        </div>
+      </div>
+
+      <!-- 3. Muskel-Fokus (NEU: Chips + Freitext, ersetzt altes Text-Input) -->
+      <div class="card">
+        <h2 class="card__title">🎯 Muskel-Fokus</h2>
+        <p class="card__sub">Wähle eine oder mehrere Gruppen und ergänze bei Bedarf einen Freitext.</p>
+        <div class="muscle-chips">
+          <button *ngFor="let m of muscleGroupOptions"
+                  type="button"
+                  class="muscle-chip"
+                  [class.muscle-chip--active]="isMuscleGroupSelected(m)"
+                  (click)="toggleMuscleGroup(m)">
+            {{ m }}
+          </button>
+        </div>
+        <div class="form-group form-group--spaced">
+          <label class="form-label">Weitere Details <span class="optional-tag">(optional)</span></label>
+          <input class="form-input" type="text"
+                 [(ngModel)]="aiFocusMusclesFreetext" name="aiFocusMusclesFreetext"
+                 placeholder="z.B. Vorderer Deltoid, Beinbeuger, oberer Rücken …"/>
+        </div>
+      </div>
+
+      <!-- 4. Regeneration (NEU) -->
+      <div class="card">
+        <h2 class="card__title">😴 Regeneration & Volumen-Toleranz</h2>
+        <p class="card__sub">Die KI passt die Satzanzahl und Intensität an deine Erholung an.</p>
 
         <div class="form-row">
-          <!-- Erfahrungslevel -->
           <div class="form-group">
-            <label class="form-label" for="aiExperienceLevel">Erfahrungslevel</label>
-            <select
-              id="aiExperienceLevel"
-              class="form-select"
-              [(ngModel)]="aiExperienceLevel"
-              name="aiExperienceLevel"
-            >
-              <option value="">— Nicht angegeben —</option>
-              <option *ngFor="let lvl of experienceLevels" [value]="lvl.value">
-                {{ lvl.label }}
-              </option>
+            <label class="form-label">Schlaf pro Nacht <span class="optional-tag">(optional)</span></label>
+            <select class="form-select" [(ngModel)]="aiSleepHours" name="aiSleepHours">
+              <option [ngValue]="null">— Nicht angegeben —</option>
+              <option *ngFor="let s of sleepOptions" [ngValue]="s.value">{{ s.label }}</option>
             </select>
           </div>
 
-          <!-- Trainingstage -->
           <div class="form-group">
-            <label class="form-label" for="aiDaysPerWeek">Trainingstage / Woche</label>
-            <select
-              id="aiDaysPerWeek"
-              class="form-select"
-              [(ngModel)]="aiDaysPerWeek"
-              name="aiDaysPerWeek"
-            >
-              <option [value]="null">— Nicht angegeben —</option>
-              <option *ngFor="let d of daysOptions" [value]="d">{{ d }} Tag{{ d > 1 ? 'e' : '' }}</option>
-            </select>
+            <label class="form-label">Stresslevel <span class="optional-tag">(optional)</span></label>
+            <div class="stress-grid">
+              <button type="button" class="stress-btn stress-btn--low"
+                      [class.stress-btn--active]="aiStressLevel === 'LOW'"
+                      (click)="aiStressLevel = aiStressLevel === 'LOW' ? '' : 'LOW'">
+                😌 Niedrig
+              </button>
+              <button type="button" class="stress-btn stress-btn--moderate"
+                      [class.stress-btn--active]="aiStressLevel === 'MODERATE'"
+                      (click)="aiStressLevel = aiStressLevel === 'MODERATE' ? '' : 'MODERATE'">
+                😐 Moderat
+              </button>
+              <button type="button" class="stress-btn stress-btn--high"
+                      [class.stress-btn--active]="aiStressLevel === 'HIGH'"
+                      (click)="aiStressLevel = aiStressLevel === 'HIGH' ? '' : 'HIGH'">
+                😤 Hoch
+              </button>
+            </div>
           </div>
         </div>
 
+        <!-- Regenerations-Hinweis -->
+        <div class="regen-hint" *ngIf="aiSleepHours !== null || aiStressLevel">
+          <span *ngIf="(aiSleepHours !== null && aiSleepHours <= 5) || aiStressLevel === 'HIGH'"
+                class="regen-hint--warn">
+            ⚠ Schlechte Regeneration — KI reduziert Volumen um ~20%
+          </span>
+          <span *ngIf="aiSleepHours !== null && aiSleepHours >= 8 && aiStressLevel === 'LOW'"
+                class="regen-hint--ok">
+            ✓ Gute Regeneration — KI kann Volumen leicht erhöhen
+          </span>
+          <span *ngIf="aiSleepHours !== null && aiSleepHours >= 6 && aiSleepHours <= 7
+                       && aiStressLevel !== 'HIGH' && aiStressLevel !== 'LOW'"
+                class="regen-hint--neutral">
+            → Moderate Regeneration — Standardvolumen
+          </span>
+        </div>
+      </div>
+
+      <!-- 5. Verletzungen (NEU) -->
+      <div class="card">
+        <h2 class="card__title">🩹 Verletzungen & Einschränkungen</h2>
+        <p class="card__sub">
+          Beschreibe Schmerzen oder Einschränkungen — die KI wählt automatisch sichere Alternativen.
+        </p>
+        <textarea class="form-textarea" rows="2"
+                  [(ngModel)]="aiInjuries" name="aiInjuries"
+                  placeholder="z.B. Knieschmerzen rechts, Schulterschmerzen beim Drücken, kein Kreuzheben …"></textarea>
+        <div class="injury-examples" *ngIf="!aiInjuries">
+          <span>Beispiele:</span>
+          <button type="button" class="example-chip" (click)="aiInjuries = 'Knieschmerzen'">Knieschmerzen</button>
+          <button type="button" class="example-chip" (click)="aiInjuries = 'Schulterschmerzen'">Schulterschmerzen</button>
+          <button type="button" class="example-chip" (click)="aiInjuries = 'Rückenschmerzen'">Rückenschmerzen</button>
+          <button type="button" class="example-chip" (click)="aiInjuries = 'Handgelenksschmerzen'">Handgelenke</button>
+        </div>
+      </div>
+
+      <!-- 6. Optionale Parameter -->
+      <div class="card">
+        <h2 class="card__title">⚙️ Weitere Parameter</h2>
+        <p class="card__sub">Alle Felder sind optional — verbessern aber den Plan deutlich.</p>
+
         <div class="form-row">
-          <!-- Trainingsziel -->
+          <div class="form-group">
+            <label class="form-label" for="aiExperienceLevel">Erfahrungslevel</label>
+            <select id="aiExperienceLevel" class="form-select"
+                    [(ngModel)]="aiExperienceLevel" name="aiExperienceLevel">
+              <option value="">— Nicht angegeben —</option>
+              <option *ngFor="let lvl of experienceLevels" [value]="lvl.value">{{ lvl.label }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="aiDaysPerWeek">Trainingstage / Woche</label>
+            <select id="aiDaysPerWeek" class="form-select"
+                    [(ngModel)]="aiDaysPerWeek" name="aiDaysPerWeek">
+              <option [ngValue]="null">— Nicht angegeben —</option>
+              <option *ngFor="let d of daysOptions" [ngValue]="d">{{ d }} Tag{{ d > 1 ? 'e' : '' }}</option>
+            </select>
+          </div>
+
           <div class="form-group">
             <label class="form-label" for="aiGoal">Trainingsziel</label>
-            <select
-              id="aiGoal"
-              class="form-select"
-              [(ngModel)]="aiGoal"
-              name="aiGoal"
-            >
+            <select id="aiGoal" class="form-select" [(ngModel)]="aiGoal" name="aiGoal">
               <option value="">— Kein bestimmtes Ziel —</option>
               <option *ngFor="let g of fitnessGoals" [value]="g.value">{{ g.label }}</option>
             </select>
           </div>
+        </div>
+      </div>
 
-          <!-- Fokus-Muskelgruppen -->
-          <div class="form-group form-group--wide">
-            <label class="form-label" for="aiFocusMuscles">Fokus-Muskelgruppen</label>
-            <input
-              id="aiFocusMuscles"
-              class="form-input"
-              type="text"
-              [(ngModel)]="aiFocusMuscles"
-              name="aiFocusMuscles"
-              placeholder="z.B. Brust, Schulter, Trizeps"
-            />
+      <!-- 7. Mobilitätsplan (NEU, nur für INTERMEDIATE / ADVANCED) -->
+      <div class="mobility-card" *ngIf="showMobilityOption"
+           [class.mobility-card--active]="includeMobilityPlan"
+           (click)="includeMobilityPlan = !includeMobilityPlan">
+        <div class="mobility-card__icon">🧘</div>
+        <div class="mobility-card__content">
+          <div class="mobility-card__title">Mobilitätsplan hinzufügen</div>
+          <div class="mobility-card__sub">
+            KI erstellt einen separaten Mobilitätsblock mit Dehn- &amp; Beweglichkeitsübungen
+            inkl. kurzer Ausführungsbeschreibung.
           </div>
+        </div>
+        <div class="mobility-card__toggle">
+          <span class="toggle-indicator" [class.toggle-indicator--on]="includeMobilityPlan">
+            {{ includeMobilityPlan ? 'AN' : 'AUS' }}
+          </span>
         </div>
       </div>
 
@@ -153,23 +223,19 @@
         <div class="ai-hint__icon">💡</div>
         <div class="ai-hint__text">
           Die KI generiert deinen Plan und speichert ihn direkt.
-          Du kannst danach Feedback geben oder den Plan im Detail ansehen.
-          Wenn die KI nicht erreichbar ist, wird automatisch ein Fallback-Plan erstellt.
+          Alle oben eingegebenen Parameter fließen aktiv in die Planlogik ein.
+          Bei KI-Ausfall wird ein intelligenter Fallback-Plan erstellt.
         </div>
       </div>
 
-      <!-- Actions -->
+      <!-- Aktionen -->
       <div class="create-actions">
         <a routerLink="/dashboard" class="btn btn--secondary">Abbrechen</a>
-        <button
-          type="submit"
-          class="btn btn--ai"
-          [disabled]="isLoading || !aiForm.valid"
-        >
+        <button type="submit" class="btn btn--ai"
+                [disabled]="isLoading || !aiForm.valid">
           <span *ngIf="!isLoading">🤖 Plan generieren</span>
           <span *ngIf="isLoading" class="spinner-wrap">
-            <span class="spinner"></span>
-            KI generiert…
+            <span class="spinner"></span>KI generiert…
           </span>
         </button>
       </div>
@@ -177,38 +243,23 @@
     </form>
   </ng-container>
 
-  <!-- ══════════════════════════════════════════════════════════════ -->
-  <!-- MANUELLER MODUS                                               -->
-  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- ══════════════════ MANUELLER MODUS ══════════════════ -->
   <ng-container *ngIf="mode === 'manual'">
     <form (ngSubmit)="onSubmit()" #createForm="ngForm" class="create-form">
 
       <div class="card">
         <h2 class="card__title">Plandetails</h2>
-
         <div class="form-group">
           <label class="form-label" for="planName">Planname *</label>
-          <input
-            id="planName"
-            class="form-input"
-            type="text"
-            [(ngModel)]="planName"
-            name="planName"
-            required
-            placeholder="z.B. Push Day, Oberkörper A, …"
-          />
+          <input id="planName" class="form-input" type="text"
+                 [(ngModel)]="planName" name="planName"
+                 required placeholder="z.B. Push Day"/>
         </div>
-
         <div class="form-group">
-          <label class="form-label" for="description">Beschreibung (optional)</label>
-          <textarea
-            id="description"
-            class="form-textarea"
-            [(ngModel)]="description"
-            name="description"
-            rows="2"
-            placeholder="Kurze Beschreibung des Plans …"
-          ></textarea>
+          <label class="form-label" for="description">Beschreibung <span class="optional-tag">(optional)</span></label>
+          <textarea id="description" class="form-textarea"
+                    [(ngModel)]="description" name="description"
+                    rows="2" placeholder="Kurze Beschreibung …"></textarea>
         </div>
       </div>
 
@@ -216,7 +267,7 @@
         <div class="card__header">
           <h2 class="card__title">Übungen</h2>
           <button type="button" class="btn btn--secondary btn--sm" (click)="addExercise()">
-            + Übung hinzufügen
+            + Übung
           </button>
         </div>
 
@@ -227,32 +278,32 @@
               <div class="form-group form-group--wide">
                 <label class="form-label">Übungsname *</label>
                 <input class="form-input" type="text" [(ngModel)]="ex.exerciseName"
-                       [name]="'exerciseName_' + i" required placeholder="z.B. Bankdrücken" />
+                       [name]="'exerciseName_' + i" required placeholder="z.B. Bankdrücken"/>
               </div>
               <div class="form-group">
                 <label class="form-label">Sätze</label>
                 <input class="form-input" type="number" [(ngModel)]="ex.sets"
-                       [name]="'sets_' + i" min="1" max="20" />
+                       [name]="'sets_' + i" min="1" max="20"/>
               </div>
               <div class="form-group">
                 <label class="form-label">Wdh</label>
                 <input class="form-input" type="number" [(ngModel)]="ex.reps"
-                       [name]="'reps_' + i" min="1" max="100" />
+                       [name]="'reps_' + i" min="1" max="100"/>
               </div>
               <div class="form-group">
                 <label class="form-label">Gewicht (kg)</label>
                 <input class="form-input" type="number" [(ngModel)]="ex.weightKg"
-                       [name]="'weight_' + i" min="0" step="0.5" />
+                       [name]="'weight_' + i" min="0" step="0.5"/>
               </div>
               <div class="form-group">
                 <label class="form-label">Pause (s)</label>
                 <input class="form-input" type="number" [(ngModel)]="ex.restSeconds"
-                       [name]="'rest_' + i" min="0" max="600" />
+                       [name]="'rest_' + i" min="0" max="600"/>
               </div>
               <div class="form-group">
                 <label class="form-label">Ziel-RPE</label>
                 <input class="form-input" type="number" [(ngModel)]="ex.targetRpe"
-                       [name]="'rpe_' + i" min="1" max="10" />
+                       [name]="'rpe_' + i" min="1" max="10"/>
               </div>
             </div>
             <button type="button" class="exercise-row__remove"

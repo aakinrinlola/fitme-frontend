@@ -18,8 +18,24 @@ export interface GeneratePlanRequest {
   userPrompt: string;
   fitnessGoal?: string;
   daysPerWeek?: number;
+  /** Legacy Freitext, intern mit focusMuscleGroups gemergt */
   focusMuscles?: string;
   experienceLevel?: string;
+  // ── Neu ──────────────────────────────────────────────────────
+  /** Trainingsdauer: 30 / 45 / 60 / 75 / 90 Minuten */
+  sessionDurationMinutes?: number;
+  /** Schlafstunden pro Nacht */
+  sleepHoursPerNight?: number;
+  /** LOW / MODERATE / HIGH */
+  stressLevel?: string;
+  /** Freitext für Verletzungen / Einschränkungen */
+  injuries?: string;
+  /** Vordefinierte Chip-Auswahl z.B. ["Beine","Glutes"] */
+  focusMuscleGroups?: string[];
+  /** Zusätzlicher Freitext-Fokus */
+  focusMusclesFreetext?: string;
+  /** true → KI erstellt Mobilitätsblock */
+  includeMobilityPlan?: boolean;
 }
 
 export interface TrainingPlanSummary {
@@ -44,6 +60,8 @@ export interface PlannedExercise {
   targetRpe: number;
   order: number;
   trainingDay: string;
+  /** Kurze Ausführungsbeschreibung (v.a. für Mobilitätsübungen) */
+  description?: string;
 }
 
 export interface TrainingPlanDetail {

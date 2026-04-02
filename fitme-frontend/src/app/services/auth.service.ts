@@ -1,13 +1,14 @@
 import { Injectable, Inject, Optional } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, tap, of, map, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, tap, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   AuthResponse, LoginRequest, RegisterRequest,
   RefreshTokenRequest, UserInfo
 } from '../models/auth.model';
 import { AuthService as Auth0Service } from '@auth0/auth0-angular';
+import { User as Auth0User } from '@auth0/auth0-spa-js';
 
 /**
  * Dual-Mode AuthService:
@@ -37,18 +38,17 @@ export class AuthService {
   ) {
     // Auth0-Modus: User-Info aus Auth0 SDK synchronisieren
     if (this.isAuth0 && this.auth0) {
-      this.auth0.user$.subscribe(auth0User => {
+      this.auth0.user$.subscribe((auth0User: Auth0User | null | undefined) => {
         if (auth0User) {
           const userInfo: UserInfo = {
             id: 0,  // wird vom Backend über /api/users/me geladen
-            username: auth0User.nickname || auth0User.name || '',
-            email: auth0User.email || '',
+            username: auth0User.nickname ?? auth0User.name ?? '',
+            email: auth0User.email ?? '',
             role: 'USER',
             fitnessLevel: 'BEGINNER',
             age: 0,
             weightKg: 0,
             heightCm: 0,
-            motivationText: null,
           };
           this.currentUserSubject.next(userInfo);
         } else {
@@ -62,29 +62,16 @@ export class AuthService {
   // PUBLIC API — identisch für beide Modi
   // ══════════════════════════════════════════════════════════════
 
-  /**
-   * Login.
-   * Local: HTTP POST → /api/auth/login
-   * Auth0: Redirect zu Auth0 Universal Login
-   */
   login(request?: LoginRequest): Observable<AuthResponse> {
     if (this.isAuth0 && this.auth0) {
       this.auth0.loginWithRedirect();
-      // Gibt ein leeres Observable zurück — Auth0 übernimmt den Flow
       return of({} as AuthResponse);
     }
-
-    // Local Mode
     return this.http.post<AuthResponse>(`${this.baseUrl}/login`, request).pipe(
       tap(res => this.storeSession(res))
     );
   }
 
-  /**
-   * Registrierung.
-   * Local: HTTP POST → /api/auth/register
-   * Auth0: Redirect zu Auth0 Signup
-   */
   register(request?: RegisterRequest): Observable<AuthResponse> {
     if (this.isAuth0 && this.auth0) {
       this.auth0.loginWithRedirect({
@@ -92,18 +79,11 @@ export class AuthService {
       });
       return of({} as AuthResponse);
     }
-
-    // Local Mode
     return this.http.post<AuthResponse>(`${this.baseUrl}/register`, request).pipe(
       tap(res => this.storeSession(res))
     );
   }
 
-  /**
-   * Token erneuern.
-   * Local: HTTP POST → /api/auth/refresh
-   * Auth0: SDK macht das automatisch
-   */
   refresh(request: RefreshTokenRequest): Observable<AuthResponse> {
     if (this.isAuth0) {
       return of({} as AuthResponse);
@@ -113,9 +93,6 @@ export class AuthService {
     );
   }
 
-  /**
-   * Logout.
-   */
   logout(): void {
     if (this.isAuth0 && this.auth0) {
       this.auth0.logout({
@@ -125,24 +102,16 @@ export class AuthService {
       });
       return;
     }
-
-    // Local Mode
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
     this.currentUserSubject.next(null);
   }
 
-  /**
-   * Prüft ob User eingeloggt ist.
-   */
   isLoggedIn(): boolean {
     if (this.isAuth0 && this.auth0) {
-      // Auth0: synchron prüfen über den aktuellen User-State
       return this.currentUserSubject.value !== null;
     }
-
-    // Local Mode
     const token = this.getAccessToken();
     if (!token) return false;
     if (this.isTokenExpired(token)) {
@@ -152,10 +121,6 @@ export class AuthService {
     return true;
   }
 
-  /**
-   * Gibt den Auth0 isAuthenticated$ Observable zurück (für Guards).
-   * In Local-Mode: Observable basierend auf Token-Check.
-   */
   isAuthenticated$(): Observable<boolean> {
     if (this.isAuth0 && this.auth0) {
       return this.auth0.isAuthenticated$;
@@ -164,7 +129,7 @@ export class AuthService {
   }
 
   getAccessToken(): string | null {
-    if (this.isAuth0) return null; // Auth0 SDK managed
+    if (this.isAuth0) return null;
     return localStorage.getItem(this.ACCESS_TOKEN_KEY);
   }
 

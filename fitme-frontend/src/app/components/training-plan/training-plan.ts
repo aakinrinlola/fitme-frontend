@@ -1,130 +1,156 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TrainingService } from '../../services/training.service';
-import { TrainingPlanDetail, TrainingDayGroup } from '../../models/training.model';
+import {
+  FeedbackAvailability, PlannedExercise,
+  SessionFeedbackResponse, TrainingDayGroup, TrainingPlanDetail
+} from '../../models/training.model';
 
 @Component({
   selector: 'app-training-plan',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, DatePipe],
   templateUrl: './training-plan.html',
   styleUrls: ['./training-plan.scss']
 })
 export class TrainingPlan implements OnInit {
+
   plan: TrainingPlanDetail | null = null;
-  planId!: number;
-  isLoading      = true;
-  errorMessage: string | null = null;
-  successMessage: string | null = null;
-
   dayGroups: TrainingDayGroup[] = [];
-  isMultiDayPlan = false;
+  feedbackAvailability: FeedbackAvailability | null = null;
 
-  showDeleteConfirm = false;
-  isDeleting        = false;
-  isTogglingStatus  = false;
+  isLoading       = false;
+  statusMessage:  string | null = null;
+  showDeleteConfirm  = false;
+  showFeedbackModal  = false;
+
+  sessionRpe  = 6;
+  feedbackNote = '';
+  feedbackResult: SessionFeedbackResponse | null = null;
+
+  private planId!: number;
 
   constructor(
-    private route: ActivatedRoute,
-    private router: Router,
+    private route:           ActivatedRoute,
+    private router:          Router,
     private trainingService: TrainingService
   ) {}
 
   ngOnInit(): void {
     this.planId = Number(this.route.snapshot.paramMap.get('id'));
+    if (!this.planId) { this.router.navigate(['/dashboard']); return; }
     this.loadPlan();
   }
 
-  loadPlan(): void {
+  private loadPlan(): void {
     this.isLoading = true;
-    this.errorMessage = null;
     this.trainingService.getPlan(this.planId).subscribe({
-      next: plan => {
-        this.plan = plan;
-        this.dayGroups = this.groupByDay(plan);
-        this.isMultiDayPlan = this.dayGroups.length > 1 ||
-          (this.dayGroups.length === 1 && this.dayGroups[0].dayName !== '');
+      next: (plan) => {
+        this.plan      = plan;
+        this.dayGroups = this.groupByDay(plan.exercises);
         this.isLoading = false;
+        this.loadFeedbackAvailability();
       },
-      error: () => { this.errorMessage = 'Trainingsplan konnte nicht geladen werden.'; this.isLoading = false; }
+      error: () => { this.isLoading = false; }
     });
   }
 
-  // ── Status-Toggle ─────────────────────────────────────────────────
-  toggleActiveStatus(): void {
-    if (!this.plan || this.isTogglingStatus) return;
-    const newStatus = !this.plan.active;
-    this.isTogglingStatus = true;
-    this.errorMessage = null;
-    this.successMessage = null;
-
-    this.trainingService.setActiveStatus(this.planId, newStatus).subscribe({
-      next: res => {
-        if (this.plan) {
-          this.plan = { ...this.plan, active: res.active, activeUntil: res.activeUntil };
-        }
-        this.successMessage = res.message;
-        this.isTogglingStatus = false;
-        setTimeout(() => { this.successMessage = null; }, 3000);
-      },
-      error: () => {
-        this.errorMessage = 'Status konnte nicht geändert werden. Bitte versuche es erneut.';
-        this.isTogglingStatus = false;
-      }
+  private loadFeedbackAvailability(): void {
+    if (!this.plan?.active) return;
+    this.trainingService.getFeedbackAvailability(this.planId).subscribe({
+      next:  (fa) => this.feedbackAvailability = fa,
+      error: ()   => {}
     });
   }
 
-  // ── Delete ───────────────────────────────────────────────────────
-  openDeleteConfirm(): void  { this.showDeleteConfirm = true; }
-  cancelDelete(): void       { if (!this.isDeleting) this.showDeleteConfirm = false; }
-  confirmDelete(): void {
-    this.isDeleting = true;
-    this.trainingService.deletePlan(this.planId).subscribe({
-      next:  () => this.router.navigate(['/dashboard']),
-      error: () => {
-        this.errorMessage = 'Plan konnte nicht gelöscht werden.';
-        this.isDeleting = false;
-        this.showDeleteConfirm = false;
-      }
-    });
-  }
-
-  // ── Helpers ──────────────────────────────────────────────────────
-  getActiveDaysRemaining(): number | null {
-    if (!this.plan?.activeUntil) return null;
-    return Math.ceil((new Date(this.plan.activeUntil).getTime() - Date.now()) / 86400000);
-  }
-
-  formatActiveUntil(): string {
-    if (!this.plan?.activeUntil) return '';
-    return new Date(this.plan.activeUntil).toLocaleDateString('de-DE', {
-      day: '2-digit', month: '2-digit', year: 'numeric'
-    });
-  }
-
-  formatNextFeedback(): string {
-    if (!this.plan?.nextFeedbackAvailableAt) return '';
-    return new Date(this.plan.nextFeedbackAvailableAt).toLocaleDateString('de-DE', {
-      day: '2-digit', month: '2-digit'
-    });
-  }
-
-  private groupByDay(plan: TrainingPlanDetail): TrainingDayGroup[] {
-    const map = new Map<string, TrainingDayGroup>();
-    for (const ex of plan.exercises) {
-      const key = ex.trainingDay ?? '';
-      if (!map.has(key)) map.set(key, { dayName: key, exercises: [] });
-      map.get(key)!.exercises.push(ex);
+  private groupByDay(exercises: PlannedExercise[]): TrainingDayGroup[] {
+    const map = new Map<string, PlannedExercise[]>();
+    for (const ex of exercises) {
+      const key = ex.trainingDay ?? 'Alle Tage';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(ex);
     }
-    return Array.from(map.values()).sort((a, b) => a.dayName.localeCompare(b.dayName));
+    return Array.from(map.entries()).map(([dayName, exs]) => ({
+      dayName,
+      exercises: exs.sort((a, b) => a.order - b.order)
+    }));
   }
 
-  formatRest(seconds: number): string {
-    return seconds >= 60 ? `${Math.floor(seconds / 60)} min` : `${seconds}s`;
+  /** Klasse für das Tag-Card — Mobilitätsblock erhält eigene Farbe */
+  getDayCardClass(index: number, dayName: string): string {
+    if (dayName === 'Mobilitätsblock') return 'day-card--mobility';
+    const classes = ['day-card--a', 'day-card--b', 'day-card--c', 'day-card--d'];
+    return classes[index % classes.length];
   }
 
-  dayColorClass(i: number): string {
-    return ['day-card--a', 'day-card--b', 'day-card--c', 'day-card--d'][i % 4];
+  getRpeClass(rpe: number | undefined): string {
+    if (!rpe) return 'rpe--neutral';
+    if (rpe <= 4) return 'rpe--easy';
+    if (rpe <= 6) return 'rpe--moderate';
+    if (rpe <= 8) return 'rpe--hard';
+    return 'rpe--max';
+  }
+
+  activatePlan(): void {
+    this.isLoading = true;
+    this.trainingService.setPlanStatus(this.planId, true).subscribe({
+      next: (res) => {
+        this.statusMessage = res.message;
+        this.loadPlan();
+      },
+      error: (err) => {
+        this.statusMessage = 'Fehler: ' + (err.error?.message ?? 'Unbekannt');
+        this.isLoading = false;
+      }
+    });
+  }
+
+  deactivatePlan(): void {
+    this.isLoading = true;
+    this.trainingService.setPlanStatus(this.planId, false).subscribe({
+      next: (res) => {
+        this.statusMessage = res.message;
+        this.loadPlan();
+      },
+      error: (err) => {
+        this.statusMessage = 'Fehler: ' + (err.error?.message ?? 'Unbekannt');
+        this.isLoading = false;
+      }
+    });
+  }
+
+  confirmDelete(): void { this.showDeleteConfirm = true; }
+
+  deletePlan(): void {
+    this.showDeleteConfirm = false;
+    this.trainingService.deletePlan(this.planId).subscribe({
+      next: () => this.router.navigate(['/dashboard']),
+      error: (err) => { this.statusMessage = 'Fehler beim Löschen: ' + (err.error?.message ?? ''); }
+    });
+  }
+
+  submitFeedback(): void {
+    this.isLoading = true;
+    this.trainingService.submitFeedback({
+      trainingPlanId: this.planId,
+      sessionRpe: this.sessionRpe,
+      userNote: this.feedbackNote || undefined
+    }).subscribe({
+      next: (res) => {
+        this.showFeedbackModal = false;
+        this.feedbackResult    = res;
+        this.feedbackNote      = '';
+        this.sessionRpe        = 6;
+        this.isLoading         = false;
+        this.loadPlan();
+      },
+      error: (err) => {
+        this.statusMessage = 'Feedback-Fehler: ' + (err.error?.message ?? 'Unbekannt');
+        this.showFeedbackModal = false;
+        this.isLoading = false;
+      }
+    });
   }
 }
