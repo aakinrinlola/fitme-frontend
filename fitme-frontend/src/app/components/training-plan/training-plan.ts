@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TrainingService } from '../../services/training.service';
+import { PdfExportService } from '../../services/pdf-export.service';
 import {
   FeedbackAvailability, PlannedExercise,
   SessionFeedbackResponse, TrainingDayGroup, TrainingPlanDetail
@@ -21,21 +22,18 @@ export class TrainingPlan implements OnInit {
   dayGroups: TrainingDayGroup[] = [];
   feedbackAvailability: FeedbackAvailability | null = null;
 
-  // Loading states
   isLoading        = false;
   isDeleting       = false;
   isTogglingStatus = false;
+  isExportingPdf   = false;
 
-  // Messages
   statusMessage:  string | null = null;
   errorMessage:   string | null = null;
   successMessage: string | null = null;
 
-  // Modal flags
   showDeleteConfirm = false;
   showFeedbackModal = false;
 
-  // Feedback
   sessionRpe   = 6;
   feedbackNote = '';
   feedbackResult: SessionFeedbackResponse | null = null;
@@ -45,7 +43,8 @@ export class TrainingPlan implements OnInit {
   constructor(
     private route:           ActivatedRoute,
     private router:          Router,
-    private trainingService: TrainingService
+    private trainingService: TrainingService,
+    private pdfExport:       PdfExportService
   ) {}
 
   ngOnInit(): void {
@@ -88,19 +87,25 @@ export class TrainingPlan implements OnInit {
     }));
   }
 
-  // ── Getter für altes HTML ─────────────────────────────────────────────────
+  // ── PDF-Export ────────────────────────────────────────────────────────────
 
-  get isMultiDayPlan(): boolean {
-    return this.dayGroups.length > 1;
+  exportPdf(): void {
+    if (!this.plan) return;
+    this.isExportingPdf = true;
+    try {
+      this.pdfExport.exportPlan(this.plan, this.dayGroups);
+    } finally {
+      setTimeout(() => this.isExportingPdf = false, 800);
+    }
   }
 
-  // ── Methoden für altes HTML ───────────────────────────────────────────────
+  // ── Getter / Hilfsmethoden für HTML ──────────────────────────────────────
 
-  cancelDelete(): void { this.showDeleteConfirm = false; }
+  get isMultiDayPlan(): boolean { return this.dayGroups.length > 1; }
 
-  openDeleteConfirm(): void { this.showDeleteConfirm = true; }
-
-  confirmDelete(): void { this.deletePlan(); }
+  cancelDelete():       void { this.showDeleteConfirm = false; }
+  openDeleteConfirm():  void { this.showDeleteConfirm = true;  }
+  confirmDelete():      void { this.deletePlan(); }
 
   toggleActiveStatus(): void {
     if (!this.plan) return;
@@ -133,16 +138,13 @@ export class TrainingPlan implements OnInit {
     return s > 0 ? `${m}m ${s}s` : `${m}m`;
   }
 
-  /** Wird vom alten HTML mit dayColorClass(i) aufgerufen */
   dayColorClass(index: number): string {
     return this.getDayCardClass(index, this.dayGroups[index]?.dayName ?? '');
   }
 
-  /** Wird vom neuen HTML mit getDayCardClass(i, dayName) aufgerufen */
   getDayCardClass(index: number, dayName: string): string {
     if (dayName === 'Mobilitätsblock') return 'day-card--mobility';
-    const classes = ['day-card--a', 'day-card--b', 'day-card--c', 'day-card--d'];
-    return classes[index % classes.length];
+    return ['day-card--a', 'day-card--b', 'day-card--c', 'day-card--d'][index % 4];
   }
 
   getRpeClass(rpe: number | undefined): string {
@@ -158,7 +160,7 @@ export class TrainingPlan implements OnInit {
   activatePlan(): void {
     this.isTogglingStatus = true;
     this.trainingService.setPlanStatus(this.planId, true).subscribe({
-      next: (res: any) => { this.statusMessage = res.message; this.isTogglingStatus = false; this.loadPlan(); },
+      next:  (res: any) => { this.statusMessage = res.message; this.isTogglingStatus = false; this.loadPlan(); },
       error: (err: any) => { this.errorMessage = 'Fehler: ' + (err.error?.message ?? 'Unbekannt'); this.isTogglingStatus = false; }
     });
   }
@@ -166,7 +168,7 @@ export class TrainingPlan implements OnInit {
   deactivatePlan(): void {
     this.isTogglingStatus = true;
     this.trainingService.setPlanStatus(this.planId, false).subscribe({
-      next: (res: any) => { this.statusMessage = res.message; this.isTogglingStatus = false; this.loadPlan(); },
+      next:  (res: any) => { this.statusMessage = res.message; this.isTogglingStatus = false; this.loadPlan(); },
       error: (err: any) => { this.errorMessage = 'Fehler: ' + (err.error?.message ?? 'Unbekannt'); this.isTogglingStatus = false; }
     });
   }
@@ -176,7 +178,7 @@ export class TrainingPlan implements OnInit {
     this.showDeleteConfirm = false;
     this.trainingService.deletePlan(this.planId).subscribe({
       next:  () => this.router.navigate(['/dashboard']),
-      error: (err: any) => { this.errorMessage = 'Fehler beim Löschen: ' + (err.error?.message ?? ''); this.isDeleting = false; }
+      error: (err: any) => { this.errorMessage = 'Fehler: ' + (err.error?.message ?? ''); this.isDeleting = false; }
     });
   }
 

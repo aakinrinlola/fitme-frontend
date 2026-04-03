@@ -159,6 +159,8 @@
     &:hover:not(:disabled) { background: #f9fafb; } }
   &--feedback  { background: #f0fdf4; color: #047857; border-color: #bbf7d0;
     &:hover { background: #dcfce7; } }
+  &--pdf       { background: #f0fdf4; color: #047857; border-color: #bbf7d0;
+    &:hover:not(:disabled) { background: #dcfce7; } }
   &--danger    { background: #fef2f2; color: #b91c1c; border-color: #fecaca;
     &:hover:not(:disabled) { background: #fee2e2; } }
 }

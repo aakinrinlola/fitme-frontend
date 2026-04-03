@@ -1,166 +1,196 @@
-<div class="tp-page">
+<div class="plan-page" *ngIf="plan">
 
-  <!-- Delete Modal -->
-  <div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="cancelDelete()">
-    <div class="modal" (click)="$event.stopPropagation()">
-      <div class="modal__icon">🗑️</div>
-      <h3 class="modal__title">Plan löschen?</h3>
-      <p class="modal__body">
-        <strong>{{ plan?.planName }}</strong> wird endgültig gelöscht.<br>
-        Alle Übungen und Feedback-Daten gehen verloren.
-      </p>
-      <div class="modal__actions">
-        <button class="btn btn--secondary" (click)="cancelDelete()" [disabled]="isDeleting">Abbrechen</button>
-        <button class="btn btn--danger"    (click)="confirmDelete()" [disabled]="isDeleting">
-          <span *ngIf="!isDeleting">Endgültig löschen</span>
-          <span *ngIf="isDeleting" class="spinner spinner--white"></span>
-        </button>
-      </div>
+  <!-- Header -->
+  <div class="plan-page__back">
+    <a routerLink="/dashboard" class="back-link">← Zurück</a>
+  </div>
+
+  <div class="plan-header">
+    <div class="plan-header__info">
+      <h1 class="plan-header__title">{{ plan.planName }}</h1>
+      <p class="plan-header__desc" *ngIf="plan.description">{{ plan.description }}</p>
+    </div>
+    <div class="plan-header__badges">
+      <span class="badge badge--active"   *ngIf="plan.active">✓ Aktiv</span>
+      <span class="badge badge--inactive" *ngIf="!plan.active">Inaktiv</span>
+      <span class="badge badge--week">Woche {{ plan.currentWeek }} / {{ plan.planDurationWeeks }}</span>
     </div>
   </div>
 
-  <div class="tp-page__back">
-    <a routerLink="/dashboard" class="back-link">← Zurück zum Dashboard</a>
+  <!-- Aktions-Leiste -->
+  <div class="plan-actions">
+    <button class="btn btn--primary" *ngIf="!plan.active"
+            (click)="activatePlan()" [disabled]="isLoading">Plan aktivieren</button>
+    <button class="btn btn--secondary" *ngIf="plan.active"
+            (click)="deactivatePlan()" [disabled]="isLoading">Deaktivieren</button>
+
+    <button class="btn btn--feedback"
+            *ngIf="plan.active && feedbackAvailability?.allowed"
+            (click)="showFeedbackModal = true">
+      📝 Feedback geben
+    </button>
+
+    <span class="feedback-locked" *ngIf="plan.active && feedbackAvailability && !feedbackAvailability.allowed">
+      🔒 Nächstes Feedback {{ feedbackAvailability.nextFeedbackAvailableAt | date:'dd.MM.yyyy' }}
+    </span>
+
+    <!-- PDF-Export -->
+    <button class="btn btn--pdf" (click)="exportPdf()" [disabled]="isExportingPdf || isLoading"
+            title="Trainingsplan als PDF herunterladen">
+      <span *ngIf="!isExportingPdf">⬇ Als PDF herunterladen</span>
+      <span *ngIf="isExportingPdf" class="spinner-wrap">
+        <span class="spinner"></span>PDF wird erstellt…
+      </span>
+    </button>
+
+    <button class="btn btn--danger" (click)="confirmDelete()" [disabled]="isLoading">Löschen</button>
   </div>
 
-  <div *ngIf="isLoading" class="loading-row">
-    <span class="spinner"></span><span>Lade Trainingsplan…</span>
+  <div *ngIf="statusMessage" class="alert" [class.alert--success]="!statusMessage.includes('Fehler')"
+       [class.alert--error]="statusMessage.includes('Fehler')">
+    {{ statusMessage }}
   </div>
-  <div *ngIf="errorMessage && !isLoading" class="alert alert--error">⚠ {{ errorMessage }}</div>
-  <div *ngIf="successMessage"             class="alert alert--success">✓ {{ successMessage }}</div>
 
-  <ng-container *ngIf="!isLoading && plan">
+  <!-- Trainingstage -->
+  <div class="days-grid" *ngIf="dayGroups.length > 0">
 
-    <!-- Header -->
-    <div class="tp-header">
-      <div class="tp-header__left">
-        <div class="tp-header__meta">
-          <span class="status-badge"
-                [class.status-badge--active]="plan.active"
-                [class.status-badge--inactive]="!plan.active">
-            {{ plan.active ? '● Aktiv' : '● Inaktiv' }}
-          </span>
-          <span class="week-badge" *ngIf="plan.active">
-            Woche {{ plan.currentWeek }} / {{ plan.planDurationWeeks }}
-          </span>
-          <span class="day-count-badge" *ngIf="isMultiDayPlan">
-            🗓 {{ dayGroups.length }} Trainingstage
-          </span>
-        </div>
+    <div *ngFor="let group of dayGroups; let i = index"
+         class="day-card"
+         [ngClass]="getDayCardClass(i, group.dayName)">
 
-        <h1 class="tp-header__title">{{ plan.planName }}</h1>
-        <p *ngIf="plan.description" class="tp-header__desc">{{ plan.description }}</p>
-
-        <!-- Ablaufdatum + Feedback-Status -->
-        <div class="tp-header__info-row">
-          <span class="info-chip info-chip--ok"      *ngIf="plan.active && (getActiveDaysRemaining() ?? 0) > 0">
-            ⏱ Aktiv noch {{ getActiveDaysRemaining() }} Tage (bis {{ formatActiveUntil() }})
-          </span>
-          <span class="info-chip info-chip--expired" *ngIf="plan.active && (getActiveDaysRemaining() ?? 1) <= 0">
-            ⚠ Abgelaufen — bitte reaktivieren
-          </span>
-          <span class="info-chip info-chip--locked"  *ngIf="plan.active && !plan.feedbackAllowedThisWeek">
-            🔒 Feedback erst ab {{ formatNextFeedback() }} wieder möglich
-          </span>
-        </div>
+      <div class="day-card__header">
+        <div class="day-card__label">{{ group.dayName }}</div>
+        <div class="day-card__count">{{ group.exercises.length }} Übungen</div>
+        <!-- Mobility-Tag -->
+        <span class="mobility-tag" *ngIf="group.dayName === 'Mobilitätsblock'">🧘 Mobility</span>
       </div>
 
-      <div class="tp-header__actions">
-        <!-- Feedback: nur wenn aktiv UND diese Woche erlaubt -->
-        <a [routerLink]="['/feedback', planId]"
-           class="btn btn--primary"
-           *ngIf="plan.active && plan.feedbackAllowedThisWeek">
-          💬 Feedback geben
-        </a>
-        <button class="btn btn--secondary" disabled
-                *ngIf="!plan.active || !plan.feedbackAllowedThisWeek"
-                [title]="!plan.active ? 'Plan ist inaktiv' : 'Feedback diese Woche bereits abgegeben'">
-          💬 Feedback {{ !plan.active ? '(inaktiv)' : '(gesperrt)' }}
-        </button>
+      <table class="exercise-table">
+        <thead>
+        <tr>
+          <th class="th--num">#</th>
+          <th class="th--name">Übung</th>
+          <th>Sätze</th>
+          <th>Wdh</th>
+          <th>Gewicht</th>
+          <th>Pause</th>
+          <th>RPE</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let ex of group.exercises; let j = index" class="exercise-row">
+          <td class="td--num">{{ j + 1 }}</td>
+          <td class="td--name">
+            <span class="ex-name">{{ ex.exerciseName }}</span>
+            <!-- Beschreibung: nur anzeigen wenn vorhanden (v.a. Mobility-Übungen) -->
+            <span class="ex-description" *ngIf="ex.description && ex.description.trim()">
+                {{ ex.description }}
+              </span>
+          </td>
+          <td>{{ ex.sets }}</td>
+          <td>{{ ex.reps }}</td>
+          <td>
+            <span *ngIf="ex.weightKg > 0">{{ ex.weightKg }} kg</span>
+            <span *ngIf="ex.weightKg === 0" class="no-weight">—</span>
+          </td>
+          <td>{{ ex.restSeconds }}s</td>
+          <td>
+              <span class="rpe-badge" [ngClass]="getRpeClass(ex.targetRpe)">
+                {{ ex.targetRpe }}
+              </span>
+          </td>
+        </tr>
+        </tbody>
+      </table>
 
-        <!-- Aktivieren / Deaktivieren -->
-        <button [class.btn--activate]="!plan.active"
-                [class.btn--deactivate]="plan.active"
-                class="btn"
-                (click)="toggleActiveStatus()"
-                [disabled]="isTogglingStatus">
-          <span *ngIf="!isTogglingStatus">
-            {{ plan.active ? '⏸ Deaktivieren' : '▶ Aktivieren' }}
-          </span>
-          <span *ngIf="isTogglingStatus" class="spinner"></span>
-        </button>
+    </div>
+  </div>
 
-        <!-- Löschen -->
-        <button class="btn btn--danger-outline" (click)="openDeleteConfirm()">
-          🗑 Löschen
-        </button>
+  <p class="empty-state" *ngIf="dayGroups.length === 0">
+    Keine Übungen im Plan gefunden.
+  </p>
+
+</div>
+
+<!-- Lade-Zustand -->
+<div class="loading-state" *ngIf="isLoading && !plan">
+  <div class="spinner"></div>
+  <p>Plan wird geladen …</p>
+</div>
+
+<!-- Fehler-Zustand -->
+<div class="error-state" *ngIf="!isLoading && !plan">
+  <p>Plan konnte nicht geladen werden.</p>
+  <a routerLink="/dashboard" class="btn btn--secondary">Zurück zum Dashboard</a>
+</div>
+
+<!-- Lösch-Bestätigung -->
+<div class="modal-backdrop" *ngIf="showDeleteConfirm" (click)="showDeleteConfirm = false">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h3>Plan löschen?</h3>
+    <p>„{{ plan?.planName }}" wird dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.</p>
+    <div class="modal__actions">
+      <button class="btn btn--secondary" (click)="showDeleteConfirm = false">Abbrechen</button>
+      <button class="btn btn--danger" (click)="deletePlan()">Löschen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Feedback-Modal -->
+<div class="modal-backdrop" *ngIf="showFeedbackModal" (click)="showFeedbackModal = false">
+  <div class="modal modal--feedback" (click)="$event.stopPropagation()">
+    <h3>📝 Trainings-Feedback</h3>
+    <p class="modal__sub">Wie war deine letzte Einheit? Die KI passt deinen Plan daraufhin an.</p>
+
+    <div class="form-group">
+      <label class="form-label">Session-RPE (1–10) *</label>
+      <div class="rpe-slider-wrap">
+        <input type="range" min="1" max="10" [(ngModel)]="sessionRpe"
+               class="rpe-slider" />
+        <span class="rpe-value" [ngClass]="getRpeClass(sessionRpe)">{{ sessionRpe }}</span>
+      </div>
+      <div class="rpe-labels">
+        <span>Sehr leicht (1)</span><span>Moderat (5)</span><span>Max (10)</span>
       </div>
     </div>
 
-    <!-- Mehrtägige Ansicht -->
-    <ng-container *ngIf="isMultiDayPlan">
-      <div class="day-overview">
-        <div *ngFor="let group of dayGroups; let i = index"
-             class="day-chip"
-             [class.day-chip--a]="i===0" [class.day-chip--b]="i===1"
-             [class.day-chip--c]="i===2" [class.day-chip--d]="i===3">
-          <span>{{ group.dayName }}</span>
-          <span class="day-chip__count">{{ group.exercises.length }} Übungen</span>
-        </div>
-      </div>
+    <div class="form-group">
+      <label class="form-label">Notiz <span class="optional-tag">(optional)</span></label>
+      <textarea class="form-textarea" rows="2" [(ngModel)]="feedbackNote"
+                placeholder="z.B. Schulter hat gezwickt, war müde, super Einheit …"></textarea>
+    </div>
 
-      <div *ngFor="let group of dayGroups; let i = index"
-           class="day-card" [ngClass]="dayColorClass(i)">
-        <div class="day-card__header">
-          <span class="day-card__label">{{ group.dayName }}</span>
-          <span class="day-card__count">{{ group.exercises.length }} Übungen</span>
-        </div>
-        <div class="table-wrap">
-          <table class="exercise-table">
-            <thead><tr><th>#</th><th>Übung</th><th>Sätze</th><th>Wdh</th><th>Gewicht</th><th>Pause</th><th>RPE</th></tr></thead>
-            <tbody>
-            <tr *ngFor="let ex of group.exercises; let j = index">
-              <td class="td--num">{{ j + 1 }}</td>
-              <td class="td--name">{{ ex.exerciseName }}</td>
-              <td class="td--c">{{ ex.sets }}</td>
-              <td class="td--c">{{ ex.reps }}</td>
-              <td class="td--c">{{ ex.weightKg > 0 ? ex.weightKg + ' kg' : 'KG' }}</td>
-              <td class="td--c">{{ formatRest(ex.restSeconds) }}</td>
-              <td class="td--c"><span class="rpe-badge">{{ ex.targetRpe }}</span></td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+    <div class="modal__actions">
+      <button class="btn btn--secondary" (click)="showFeedbackModal = false">Abbrechen</button>
+      <button class="btn btn--primary" (click)="submitFeedback()" [disabled]="isLoading">
+        <span *ngIf="!isLoading">Feedback absenden</span>
+        <span *ngIf="isLoading" class="spinner-wrap"><span class="spinner"></span>Wird verarbeitet …</span>
+      </button>
+    </div>
+  </div>
+</div>
 
-      <div class="tp-summary">
-        Gesamt: <strong>{{ plan.exercises.length }}</strong> Übungen über
-        <strong>{{ dayGroups.length }}</strong> Trainingstage
-      </div>
-    </ng-container>
+<!-- Feedback-Ergebnis -->
+<div class="modal-backdrop" *ngIf="feedbackResult" (click)="feedbackResult = null">
+  <div class="modal modal--result" (click)="$event.stopPropagation()">
+    <h3>🤖 KI-Auswertung</h3>
+    <p class="ai-explanation">{{ feedbackResult.aiExplanation }}</p>
 
-    <!-- Flache Ansicht -->
-    <ng-container *ngIf="!isMultiDayPlan">
-      <div class="card">
-        <div class="card__title">Übungen ({{ plan.exercises.length }})</div>
-        <div class="table-wrap">
-          <table class="exercise-table">
-            <thead><tr><th>#</th><th>Übung</th><th>Sätze</th><th>Wdh</th><th>Gewicht</th><th>Pause</th><th>RPE</th></tr></thead>
-            <tbody>
-            <tr *ngFor="let ex of plan.exercises">
-              <td class="td--num">{{ ex.order + 1 }}</td>
-              <td class="td--name">{{ ex.exerciseName }}</td>
-              <td class="td--c">{{ ex.sets }}</td>
-              <td class="td--c">{{ ex.reps }}</td>
-              <td class="td--c">{{ ex.weightKg > 0 ? ex.weightKg + ' kg' : 'KG' }}</td>
-              <td class="td--c">{{ formatRest(ex.restSeconds) }}</td>
-              <td class="td--c"><span class="rpe-badge">{{ ex.targetRpe }}</span></td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
+    <div *ngIf="feedbackResult.adjustments.length > 0" class="adjustments">
+      <h4>Anpassungen</h4>
+      <div *ngFor="let adj of feedbackResult.adjustments" class="adjustment-row">
+        <span class="adj-name">{{ adj.exerciseName }}</span>
+        <span class="adj-detail" *ngIf="adj.previousWeight !== adj.newWeight">
+          {{ adj.previousWeight }} → {{ adj.newWeight }} kg
+        </span>
+        <span class="adj-detail" *ngIf="adj.previousReps !== adj.newReps">
+          {{ adj.previousReps }} → {{ adj.newReps }} Wdh
+        </span>
       </div>
-    </ng-container>
+    </div>
 
-  </ng-container>
+    <div class="modal__actions">
+      <button class="btn btn--primary" (click)="feedbackResult = null">Schließen</button>
+    </div>
+  </div>
 </div>
