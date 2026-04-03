@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TrainingService } from '../../services/training.service';
@@ -11,7 +11,7 @@ import {
 @Component({
   selector: 'app-training-plan',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, DatePipe],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './training-plan.html',
   styleUrls: ['./training-plan.scss']
 })
@@ -21,16 +21,26 @@ export class TrainingPlan implements OnInit {
   dayGroups: TrainingDayGroup[] = [];
   feedbackAvailability: FeedbackAvailability | null = null;
 
-  isLoading       = false;
-  statusMessage:  string | null = null;
-  showDeleteConfirm  = false;
-  showFeedbackModal  = false;
+  // Loading states
+  isLoading        = false;
+  isDeleting       = false;
+  isTogglingStatus = false;
 
-  sessionRpe  = 6;
+  // Messages
+  statusMessage:  string | null = null;
+  errorMessage:   string | null = null;
+  successMessage: string | null = null;
+
+  // Modal flags
+  showDeleteConfirm = false;
+  showFeedbackModal = false;
+
+  // Feedback
+  sessionRpe   = 6;
   feedbackNote = '';
   feedbackResult: SessionFeedbackResponse | null = null;
 
-  private planId!: number;
+  planId!: number;
 
   constructor(
     private route:           ActivatedRoute,
@@ -78,7 +88,57 @@ export class TrainingPlan implements OnInit {
     }));
   }
 
-  /** Klasse für das Tag-Card — Mobilitätsblock erhält eigene Farbe */
+  // ── Getter für altes HTML ─────────────────────────────────────────────────
+
+  get isMultiDayPlan(): boolean {
+    return this.dayGroups.length > 1;
+  }
+
+  // ── Methoden für altes HTML ───────────────────────────────────────────────
+
+  cancelDelete(): void { this.showDeleteConfirm = false; }
+
+  openDeleteConfirm(): void { this.showDeleteConfirm = true; }
+
+  confirmDelete(): void { this.deletePlan(); }
+
+  toggleActiveStatus(): void {
+    if (!this.plan) return;
+    if (this.plan.active) this.deactivatePlan();
+    else                  this.activatePlan();
+  }
+
+  getActiveDaysRemaining(): number | null {
+    if (!this.plan?.activeUntil) return null;
+    const diff = new Date(this.plan.activeUntil).getTime() - Date.now();
+    return Math.max(0, Math.ceil(diff / 86_400_000));
+  }
+
+  formatActiveUntil(): string {
+    if (!this.plan?.activeUntil) return '';
+    return new Date(this.plan.activeUntil).toLocaleDateString('de-AT');
+  }
+
+  formatNextFeedback(): string {
+    const d = this.feedbackAvailability?.nextFeedbackAvailableAt ?? this.plan?.nextFeedbackAvailableAt;
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('de-AT');
+  }
+
+  formatRest(seconds: number): string {
+    if (!seconds) return '—';
+    if (seconds < 60) return `${seconds}s`;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return s > 0 ? `${m}m ${s}s` : `${m}m`;
+  }
+
+  /** Wird vom alten HTML mit dayColorClass(i) aufgerufen */
+  dayColorClass(index: number): string {
+    return this.getDayCardClass(index, this.dayGroups[index]?.dayName ?? '');
+  }
+
+  /** Wird vom neuen HTML mit getDayCardClass(i, dayName) aufgerufen */
   getDayCardClass(index: number, dayName: string): string {
     if (dayName === 'Mobilitätsblock') return 'day-card--mobility';
     const classes = ['day-card--a', 'day-card--b', 'day-card--c', 'day-card--d'];
@@ -93,41 +153,30 @@ export class TrainingPlan implements OnInit {
     return 'rpe--max';
   }
 
+  // ── Aktionen ──────────────────────────────────────────────────────────────
+
   activatePlan(): void {
-    this.isLoading = true;
+    this.isTogglingStatus = true;
     this.trainingService.setPlanStatus(this.planId, true).subscribe({
-      next: (res) => {
-        this.statusMessage = res.message;
-        this.loadPlan();
-      },
-      error: (err) => {
-        this.statusMessage = 'Fehler: ' + (err.error?.message ?? 'Unbekannt');
-        this.isLoading = false;
-      }
+      next: (res: any) => { this.statusMessage = res.message; this.isTogglingStatus = false; this.loadPlan(); },
+      error: (err: any) => { this.errorMessage = 'Fehler: ' + (err.error?.message ?? 'Unbekannt'); this.isTogglingStatus = false; }
     });
   }
 
   deactivatePlan(): void {
-    this.isLoading = true;
+    this.isTogglingStatus = true;
     this.trainingService.setPlanStatus(this.planId, false).subscribe({
-      next: (res) => {
-        this.statusMessage = res.message;
-        this.loadPlan();
-      },
-      error: (err) => {
-        this.statusMessage = 'Fehler: ' + (err.error?.message ?? 'Unbekannt');
-        this.isLoading = false;
-      }
+      next: (res: any) => { this.statusMessage = res.message; this.isTogglingStatus = false; this.loadPlan(); },
+      error: (err: any) => { this.errorMessage = 'Fehler: ' + (err.error?.message ?? 'Unbekannt'); this.isTogglingStatus = false; }
     });
   }
 
-  confirmDelete(): void { this.showDeleteConfirm = true; }
-
   deletePlan(): void {
+    this.isDeleting       = true;
     this.showDeleteConfirm = false;
     this.trainingService.deletePlan(this.planId).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
-      error: (err) => { this.statusMessage = 'Fehler beim Löschen: ' + (err.error?.message ?? ''); }
+      next:  () => this.router.navigate(['/dashboard']),
+      error: (err: any) => { this.errorMessage = 'Fehler beim Löschen: ' + (err.error?.message ?? ''); this.isDeleting = false; }
     });
   }
 
@@ -138,7 +187,7 @@ export class TrainingPlan implements OnInit {
       sessionRpe: this.sessionRpe,
       userNote: this.feedbackNote || undefined
     }).subscribe({
-      next: (res) => {
+      next: (res: SessionFeedbackResponse) => {
         this.showFeedbackModal = false;
         this.feedbackResult    = res;
         this.feedbackNote      = '';
@@ -146,10 +195,10 @@ export class TrainingPlan implements OnInit {
         this.isLoading         = false;
         this.loadPlan();
       },
-      error: (err) => {
-        this.statusMessage = 'Feedback-Fehler: ' + (err.error?.message ?? 'Unbekannt');
+      error: (err: any) => {
+        this.errorMessage      = 'Feedback-Fehler: ' + (err.error?.message ?? 'Unbekannt');
         this.showFeedbackModal = false;
-        this.isLoading = false;
+        this.isLoading         = false;
       }
     });
   }

@@ -51,6 +51,11 @@ export class TrainingService {
     );
   }
 
+  /** Alias — wird von training-plan.ts verwendet */
+  setPlanStatus(planId: number, active: boolean): Observable<SetStatusResponse> {
+    return this.setActiveStatus(planId, active);
+  }
+
   deletePlan(planId: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/training-plans/${planId}`);
   }
@@ -84,4 +89,7 @@ export class TrainingService {
       `${this.baseUrl}/users/me/password`, { oldPassword, newPassword }
     );
   }
+
+
+
 }

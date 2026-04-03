@@ -151,8 +151,8 @@ export class TrainingPlanCreate implements OnInit {
   emptyExercise(): ExerciseInput {
     return { exerciseName: '', sets: 3, reps: 10, weightKg: 0, restSeconds: 90, targetRpe: 7 };
   }
-  addExercise():                    { this.exercises.push(this.emptyExercise()); }
-  removeExercise(index: number):    { if (this.exercises.length > 1) this.exercises.splice(index, 1); }
+  addExercise(): void { this.exercises.push(this.emptyExercise()); }
+  removeExercise(index: number): void { if (this.exercises.length > 1) this.exercises.splice(index, 1); }
 
   // ── KI-Plan generieren ───────────────────────────────────────────────────
   onGenerateSubmit(): void {
