@@ -43,7 +43,7 @@ export class TrainingPlan implements OnInit {
   // ── Aufklappbare Mobilitäts-Beschreibungen ────────────────────────────────
   private expandedDescriptions = new Set<number | string>();
 
-  toggleDescription(id: number | string): void {
+  toggleDescription(id: number): void {
     if (this.expandedDescriptions.has(id)) {
       this.expandedDescriptions.delete(id);
     } else {
@@ -51,12 +51,12 @@ export class TrainingPlan implements OnInit {
     }
   }
 
-  isDescriptionExpanded(id: number | string): boolean {
+  isDescriptionExpanded(id: number): boolean {
     return this.expandedDescriptions.has(id);
   }
 
   expandAllDescriptions(exercises: PlannedExercise[]): void {
-    exercises.forEach((ex, i) => this.expandedDescriptions.add(ex.id ?? i));
+    exercises.forEach(ex => this.expandedDescriptions.add(ex.id));
   }
 
   collapseAllDescriptions(): void {

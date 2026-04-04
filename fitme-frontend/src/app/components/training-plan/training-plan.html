@@ -135,7 +135,7 @@
         <div class="mobility-list">
           <div *ngFor="let ex of group.exercises; let j = index"
                class="mobility-item"
-               [class.mobility-item--expanded]="isDescriptionExpanded(ex.id ?? j)">
+               [class.mobility-item--expanded]="isDescriptionExpanded(ex.id)">
 
             <!-- Hauptzeile -->
             <div class="mobility-item__main">
@@ -169,15 +169,15 @@
               <!-- Expand-Toggle (nur wenn Beschreibung vorhanden) -->
               <button *ngIf="ex.description && ex.description.trim()"
                       class="mobility-item__toggle"
-                      (click)="toggleDescription(ex.id ?? j)"
-                      [title]="isDescriptionExpanded(ex.id ?? j) ? 'Beschreibung schließen' : 'Anleitung anzeigen'">
-                <span class="toggle-icon" [class.toggle-icon--open]="isDescriptionExpanded(ex.id ?? j)">▾</span>
+                      (click)="toggleDescription(ex.id)"
+                      [title]="isDescriptionExpanded(ex.id) ? 'Beschreibung schließen' : 'Anleitung anzeigen'">
+                <span class="toggle-icon" [class.toggle-icon--open]="isDescriptionExpanded(ex.id)">▾</span>
               </button>
             </div>
 
             <!-- Beschreibung (aufklappbar) -->
             <div class="mobility-item__desc"
-                 *ngIf="ex.description && ex.description.trim() && isDescriptionExpanded(ex.id ?? j)">
+                 *ngIf="ex.description && ex.description.trim() && isDescriptionExpanded(ex.id)">
               <div class="mobility-item__desc-inner">
                 <span class="desc-icon">📋</span>
                 <p>{{ ex.description }}</p>
