@@ -19,7 +19,7 @@
     <div class="card">
       <h2 class="card__title">Profildaten bearbeiten</h2>
 
-      <div *ngIf="profileError" class="alert alert--error">⚠ {{ profileError }}</div>
+      <div *ngIf="profileError"   class="alert alert--error">⚠ {{ profileError }}</div>
       <div *ngIf="profileSuccess" class="alert alert--success">✓ {{ profileSuccess }}</div>
 
       <form (ngSubmit)="saveProfile()" #profileForm="ngForm" class="profile-form">
@@ -72,11 +72,59 @@
       </form>
     </div>
 
+    <!-- ── Motivations-Nachricht ─────────────────────────────────────────── -->
+    <div class="card card--motivation">
+      <div class="motivation-card-header">
+        <div class="motivation-card-header__left">
+          <span class="motivation-card-header__icon">✍️</span>
+          <div>
+            <h2 class="card__title">Deine persönliche Botschaft</h2>
+            <p class="card__sub">
+              Schreib dir selbst etwas — ein Ziel, ein Versprechen, ein Zitat.
+              Es erscheint täglich auf deinem Dashboard.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="motivationError"   class="alert alert--error">⚠ {{ motivationError }}</div>
+      <div *ngIf="motivationSuccess" class="alert alert--success">✓ {{ motivationSuccess }}</div>
+
+      <div class="motivation-preview" *ngIf="editMotivationalMessage?.trim()">
+        <span class="motivation-preview__quote">"</span>
+        <p class="motivation-preview__text">{{ editMotivationalMessage }}</p>
+        <span class="motivation-preview__quote motivation-preview__quote--close">"</span>
+      </div>
+
+      <div class="form-group">
+        <textarea class="form-textarea motivation-textarea"
+                  rows="3"
+                  [(ngModel)]="editMotivationalMessage"
+                  name="motivationalMessage"
+                  maxlength="300"
+                  placeholder="z.B. Jede Wiederholung bringt mich meinem Ziel näher. Ich tue es für mich."></textarea>
+        <div class="motivation-char-count">
+          {{ editMotivationalMessage?.length ?? 0 }} / 300
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn--motivation"
+                (click)="saveMotivationalMessage()"
+                [disabled]="isSavingMotivation">
+          <span *ngIf="!isSavingMotivation">💾 Botschaft speichern</span>
+          <span *ngIf="isSavingMotivation" class="spinner-wrap">
+            <span class="spinner spinner--dark"></span>Speichern…
+          </span>
+        </button>
+      </div>
+    </div>
+
     <!-- Password Card -->
     <div class="card">
       <h2 class="card__title">Passwort ändern</h2>
 
-      <div *ngIf="passwordError" class="alert alert--error">⚠ {{ passwordError }}</div>
+      <div *ngIf="passwordError"   class="alert alert--error">⚠ {{ passwordError }}</div>
       <div *ngIf="passwordSuccess" class="alert alert--success">✓ {{ passwordSuccess }}</div>
 
       <form (ngSubmit)="changePassword()" #pwForm="ngForm" class="profile-form">

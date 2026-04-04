@@ -17,6 +17,37 @@
     </div>
   </div>
 
+  <!-- RPE-Legende -->
+  <div class="rpe-legend">
+    <span class="rpe-legend__label">RPE-Skala</span>
+    <div class="rpe-legend__scale">
+      <div class="rpe-legend__item rpe-legend__item--easy">
+        <div class="rpe-legend__dots">
+          <span>1</span><span>2</span><span>3</span><span>4</span>
+        </div>
+        <span class="rpe-legend__desc">Leicht — noch viele Wiederholungen möglich</span>
+      </div>
+      <div class="rpe-legend__item rpe-legend__item--moderate">
+        <div class="rpe-legend__dots">
+          <span>5</span><span>6</span>
+        </div>
+        <span class="rpe-legend__desc">Moderat — anstrengend, aber kontrollierbar</span>
+      </div>
+      <div class="rpe-legend__item rpe-legend__item--hard">
+        <div class="rpe-legend__dots">
+          <span>7</span><span>8</span>
+        </div>
+        <span class="rpe-legend__desc">Schwer — 1–2 Wdh Reserve</span>
+      </div>
+      <div class="rpe-legend__item rpe-legend__item--max">
+        <div class="rpe-legend__dots">
+          <span>9</span><span>10</span>
+        </div>
+        <span class="rpe-legend__desc">Maximal — fast keine Reserve</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Aktions-Leiste -->
   <div class="plan-actions">
     <button class="btn btn--primary" *ngIf="!plan.active"
@@ -34,9 +65,7 @@
       🔒 Nächstes Feedback {{ feedbackAvailability.nextFeedbackAvailableAt | date:'dd.MM.yyyy' }}
     </span>
 
-    <!-- PDF-Export -->
-    <button class="btn btn--pdf" (click)="exportPdf()" [disabled]="isExportingPdf || isLoading"
-            title="Trainingsplan als PDF herunterladen">
+    <button class="btn btn--pdf" (click)="exportPdf()" [disabled]="isExportingPdf || isLoading">
       <span *ngIf="!isExportingPdf">⬇ Als PDF herunterladen</span>
       <span *ngIf="isExportingPdf" class="spinner-wrap">
         <span class="spinner"></span>PDF wird erstellt…
@@ -46,7 +75,8 @@
     <button class="btn btn--danger" (click)="confirmDelete()" [disabled]="isLoading">Löschen</button>
   </div>
 
-  <div *ngIf="statusMessage" class="alert" [class.alert--success]="!statusMessage.includes('Fehler')"
+  <div *ngIf="statusMessage" class="alert"
+       [class.alert--success]="!statusMessage.includes('Fehler')"
        [class.alert--error]="statusMessage.includes('Fehler')">
     {{ statusMessage }}
   </div>
@@ -58,50 +88,115 @@
          class="day-card"
          [ngClass]="getDayCardClass(i, group.dayName)">
 
+      <!-- Card Header -->
       <div class="day-card__header">
         <div class="day-card__label">{{ group.dayName }}</div>
         <div class="day-card__count">{{ group.exercises.length }} Übungen</div>
-        <!-- Mobility-Tag -->
         <span class="mobility-tag" *ngIf="group.dayName === 'Mobilitätsblock'">🧘 Mobility</span>
       </div>
 
-      <table class="exercise-table">
-        <thead>
-        <tr>
-          <th class="th--num">#</th>
-          <th class="th--name">Übung</th>
-          <th>Sätze</th>
-          <th>Wdh</th>
-          <th>Gewicht</th>
-          <th>Pause</th>
-          <th>RPE</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr *ngFor="let ex of group.exercises; let j = index" class="exercise-row">
-          <td class="td--num">{{ j + 1 }}</td>
-          <td class="td--name">
-            <span class="ex-name">{{ ex.exerciseName }}</span>
-            <!-- Beschreibung: nur anzeigen wenn vorhanden (v.a. Mobility-Übungen) -->
-            <span class="ex-description" *ngIf="ex.description && ex.description.trim()">
-                {{ ex.description }}
-              </span>
-          </td>
-          <td>{{ ex.sets }}</td>
-          <td>{{ ex.reps }}</td>
-          <td>
-            <span *ngIf="ex.weightKg > 0">{{ ex.weightKg }} kg</span>
-            <span *ngIf="ex.weightKg === 0" class="no-weight">—</span>
-          </td>
-          <td>{{ ex.restSeconds }}s</td>
-          <td>
-              <span class="rpe-badge" [ngClass]="getRpeClass(ex.targetRpe)">
-                {{ ex.targetRpe }}
-              </span>
-          </td>
-        </tr>
-        </tbody>
-      </table>
+      <!-- ══════════════════ NORMALER TAG — Tabelle ══════════════════ -->
+      <ng-container *ngIf="group.dayName !== 'Mobilitätsblock'">
+        <table class="exercise-table">
+          <thead>
+          <tr>
+            <th class="th--num">#</th>
+            <th class="th--name">Übung</th>
+            <th>Sätze</th>
+            <th>Wdh</th>
+            <th>Gewicht</th>
+            <th>Pause</th>
+            <th>RPE</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let ex of group.exercises; let j = index" class="exercise-row">
+            <td class="td--num">{{ j + 1 }}</td>
+            <td class="td--name">
+              <span class="ex-name">{{ ex.exerciseName }}</span>
+            </td>
+            <td>{{ ex.sets }}</td>
+            <td>{{ ex.reps }}</td>
+            <td>
+              <span *ngIf="ex.weightKg > 0">{{ ex.weightKg }} kg</span>
+              <span *ngIf="ex.weightKg === 0" class="no-weight">—</span>
+            </td>
+            <td>{{ ex.restSeconds }}s</td>
+            <td>
+              <span class="rpe-badge" [ngClass]="getRpeClass(ex.targetRpe)">{{ ex.targetRpe }}</span>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </ng-container>
+
+      <!-- ══════════════════ MOBILITÄTSBLOCK — Kompaktes Card-Layout ══════════════════ -->
+      <ng-container *ngIf="group.dayName === 'Mobilitätsblock'">
+        <div class="mobility-list">
+          <div *ngFor="let ex of group.exercises; let j = index"
+               class="mobility-item"
+               [class.mobility-item--expanded]="isDescriptionExpanded(ex.id ?? j)">
+
+            <!-- Hauptzeile -->
+            <div class="mobility-item__main">
+
+              <!-- Nummer -->
+              <span class="mobility-item__num">{{ j + 1 }}</span>
+
+              <!-- Name + Inline-Stats -->
+              <div class="mobility-item__body">
+                <span class="mobility-item__name">{{ ex.exerciseName }}</span>
+                <div class="mobility-item__stats">
+                  <span class="mob-stat" *ngIf="ex.sets">
+                    <span class="mob-stat__label">Sätze</span>
+                    <span class="mob-stat__val">{{ ex.sets }}</span>
+                  </span>
+                  <span class="mob-stat__sep" *ngIf="ex.sets && ex.reps">×</span>
+                  <span class="mob-stat" *ngIf="ex.reps">
+                    <span class="mob-stat__label">Wdh</span>
+                    <span class="mob-stat__val">{{ ex.reps }}</span>
+                  </span>
+                  <span class="mob-stat" *ngIf="ex.restSeconds">
+                    <span class="mob-stat__label">Pause</span>
+                    <span class="mob-stat__val">{{ ex.restSeconds }}s</span>
+                  </span>
+                  <span class="rpe-badge rpe-badge--sm" [ngClass]="getRpeClass(ex.targetRpe)">
+                    RPE {{ ex.targetRpe }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Expand-Toggle (nur wenn Beschreibung vorhanden) -->
+              <button *ngIf="ex.description && ex.description.trim()"
+                      class="mobility-item__toggle"
+                      (click)="toggleDescription(ex.id ?? j)"
+                      [title]="isDescriptionExpanded(ex.id ?? j) ? 'Beschreibung schließen' : 'Anleitung anzeigen'">
+                <span class="toggle-icon" [class.toggle-icon--open]="isDescriptionExpanded(ex.id ?? j)">▾</span>
+              </button>
+            </div>
+
+            <!-- Beschreibung (aufklappbar) -->
+            <div class="mobility-item__desc"
+                 *ngIf="ex.description && ex.description.trim() && isDescriptionExpanded(ex.id ?? j)">
+              <div class="mobility-item__desc-inner">
+                <span class="desc-icon">📋</span>
+                <p>{{ ex.description }}</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Hinweis: alle aufklappen -->
+        <div class="mobility-footer" *ngIf="group.exercises.length > 0">
+          <button class="mobility-footer__btn" (click)="expandAllDescriptions(group.exercises)">
+            Alle Anleitungen anzeigen
+          </button>
+          <button class="mobility-footer__btn" (click)="collapseAllDescriptions()">
+            Alle schließen
+          </button>
+        </div>
+      </ng-container>
 
     </div>
   </div>
@@ -145,8 +240,7 @@
     <div class="form-group">
       <label class="form-label">Session-RPE (1–10) *</label>
       <div class="rpe-slider-wrap">
-        <input type="range" min="1" max="10" [(ngModel)]="sessionRpe"
-               class="rpe-slider" />
+        <input type="range" min="1" max="10" [(ngModel)]="sessionRpe" class="rpe-slider" />
         <span class="rpe-value" [ngClass]="getRpeClass(sessionRpe)">{{ sessionRpe }}</span>
       </div>
       <div class="rpe-labels">

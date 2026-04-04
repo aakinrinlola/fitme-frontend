@@ -19,6 +19,9 @@ export class Dashboard implements OnInit {
   isLoading = true;
   errorMessage: string | null = null;
 
+  motivationalMessage  = '';
+  isLoadingMotivation  = true;
+
   constructor(
     private authService: AuthService,
     private trainingService: TrainingService
@@ -27,27 +30,37 @@ export class Dashboard implements OnInit {
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
     this.loadPlans();
+    this.loadMotivationalMessage();
   }
 
   loadPlans(): void {
-    this.isLoading = true;
+    this.isLoading    = true;
     this.errorMessage = null;
     this.trainingService.getMyPlans().subscribe({
       next: plans => {
-        this.plans = plans;
+        this.plans     = plans;
         this.isLoading = false;
       },
       error: () => {
         this.errorMessage = 'Trainingspläne konnten nicht geladen werden.';
-        this.isLoading = false;
+        this.isLoading    = false;
       }
     });
   }
 
-  /**
-   * Berechnet die verbleibenden Tage bis zum Ablauf eines Plans.
-   * Negativer Wert = bereits abgelaufen.
-   */
+  loadMotivationalMessage(): void {
+    this.isLoadingMotivation = true;
+    this.trainingService.getProfile().subscribe({
+      next: profile => {
+        this.motivationalMessage  = profile.motivationalMessage ?? '';
+        this.isLoadingMotivation  = false;
+      },
+      error: () => {
+        this.isLoadingMotivation = false;
+      }
+    });
+  }
+
   getRemainingDays(activeUntil: string | null | undefined): number {
     if (!activeUntil) return 999;
     const diffMs = new Date(activeUntil).getTime() - Date.now();

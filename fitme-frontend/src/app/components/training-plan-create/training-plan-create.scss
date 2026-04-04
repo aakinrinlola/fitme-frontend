@@ -334,3 +334,41 @@
     color: #4338ca;
   }
 }
+
+// ── Generierungshinweis unterhalb des Submit-Buttons ─────────────────────────
+.generation-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: -8px; // visuell nah am Button
+  transition: all 0.3s ease;
+
+  &__icon {
+    font-size: 1rem;
+    margin-top: 1px;
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  &__text {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #6b7280;
+    line-height: 1.55;
+
+    strong { color: #374151; }
+  }
+
+  // Wenn die Generierung läuft → stärker hervorheben
+  &--active {
+    background: #eef2ff;
+    border-color: #c7d2fe;
+
+    .generation-hint__icon { opacity: 1; }
+    .generation-hint__text { color: #3730a3; strong { color: #1e1b4b; } }
+  }
+}

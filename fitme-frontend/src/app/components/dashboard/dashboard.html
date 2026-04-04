@@ -68,12 +68,10 @@
           <div class="plan-card__meta">
             <span>{{ plan.exerciseCount }} Übungen</span>
 
-            <!-- Wochenanzeige -->
             <span class="plan-card__week" *ngIf="plan.active">
               Woche {{ plan.currentWeek }} / {{ plan.planDurationWeeks }}
             </span>
 
-            <!-- Ablaufdatum -->
             <span *ngIf="plan.activeUntil && plan.active" class="plan-card__until"
                   [class.plan-card__until--expired]="getRemainingDays(plan.activeUntil) <= 0">
               <ng-container *ngIf="getRemainingDays(plan.activeUntil) > 0">
@@ -84,7 +82,6 @@
               </ng-container>
             </span>
 
-            <!-- Feedback gesperrt -->
             <span class="plan-card__feedback-locked"
                   *ngIf="plan.active && !plan.feedbackAllowedThisWeek">
               🔒 Feedback erst ab {{ formatDate(plan.nextFeedbackAvailableAt) }}
@@ -93,7 +90,6 @@
 
           <div class="plan-card__actions">
             <a [routerLink]="['/training-plan', plan.id]" class="btn btn--secondary btn--sm">Details</a>
-            <!-- Feedback-Button nur wenn Plan aktiv UND Feedback erlaubt -->
             <a [routerLink]="['/feedback', plan.id]" class="btn btn--primary btn--sm"
                *ngIf="plan.active && plan.feedbackAllowedThisWeek">
               Feedback
@@ -109,6 +105,26 @@
       </div>
     </ng-container>
   </div>
+
+  <!-- ── Persönliche Motivations-Botschaft ─────────────────────────────── -->
+  <div class="motivation-banner" *ngIf="motivationalMessage">
+    <div class="motivation-banner__deco">❝</div>
+    <div class="motivation-banner__content">
+      <p class="motivation-banner__text">{{ motivationalMessage }}</p>
+      <span class="motivation-banner__credit">— {{ currentUser?.username ?? 'Du' }}, an dich selbst</span>
+    </div>
+    <a routerLink="/profile" class="motivation-banner__edit" title="Botschaft bearbeiten">✏️</a>
+  </div>
+
+  <!-- Platzhalter wenn noch keine Botschaft gesetzt -->
+  <a routerLink="/profile" class="motivation-banner motivation-banner--empty"
+     *ngIf="!motivationalMessage && !isLoadingMotivation">
+    <span class="motivation-banner__deco motivation-banner__deco--muted">❝</span>
+    <p class="motivation-banner__placeholder">
+      Schreib dir selbst eine persönliche Botschaft — sie erscheint hier jeden Tag.
+    </p>
+    <span class="motivation-banner__cta">Jetzt hinzufügen →</span>
+  </a>
 
   <!-- Quick Links -->
   <div class="quick-links">

@@ -150,6 +150,7 @@ export interface UpdateProfileRequest {
   weightKg?: number;
   heightCm?: number;
   fitnessLevel?: string;
+  motivationalMessage?: string;
 }
 
 export interface UserProfile {
@@ -162,4 +163,5 @@ export interface UserProfile {
   weightKg: number;
   heightCm: number;
   createdAt: string;
+  motivationalMessage?: string;
 }

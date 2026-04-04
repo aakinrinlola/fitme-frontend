@@ -182,3 +182,217 @@
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+// ── Motivations-Banner (Dashboard) ────────────────────────────────────────────
+//    Platzierung: zwischen Plans und Quick Links
+
+.motivation-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+  border-radius: 16px;
+  padding: 24px 28px;
+  overflow: hidden;
+  text-decoration: none;
+  box-shadow: 0 8px 32px rgba(79, 70, 229, 0.28);
+  transition: box-shadow 0.25s, transform 0.2s;
+
+  // Dezente Hintergrundstruktur
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 80% 50%, rgba(255,255,255,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  &:hover {
+    box-shadow: 0 12px 40px rgba(79, 70, 229, 0.38);
+    transform: translateY(-2px);
+  }
+
+  // Großes dekoratives Anführungszeichen links
+  &__deco {
+    font-family: Georgia, serif;
+    font-size: 5rem;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.15);
+    flex-shrink: 0;
+    margin-top: -8px;
+    user-select: none;
+
+    &--muted { color: rgba(99, 102, 241, 0.25); }
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__text {
+    margin: 0 0 8px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  &__credit {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: rgba(196, 181, 253, 0.85);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  // Bearbeiten-Icon rechts
+  &__edit {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    text-decoration: none;
+    font-size: 1rem;
+    transition: background 0.2s;
+    cursor: pointer;
+
+    &:hover { background: rgba(255, 255, 255, 0.2); }
+  }
+
+  // Platzhalter-Variante (noch keine Botschaft)
+  &--empty {
+    background: #fff;
+    border: 2px dashed #c7d2fe;
+    box-shadow: none;
+    cursor: pointer;
+    padding: 20px 24px;
+
+    &:hover {
+      border-color: #818cf8;
+      background: #f5f3ff;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.1);
+      transform: translateY(-1px);
+    }
+  }
+
+  &__placeholder {
+    margin: 0;
+    flex: 1;
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-style: italic;
+  }
+
+  &__cta {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #4f46e5;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
+
+
+// ── Motivations-Card (Profil) ─────────────────────────────────────────────────
+
+.card--motivation {
+  border-color: #c7d2fe;
+  background: linear-gradient(160deg, #fafafe 0%, #f0f0ff 100%);
+}
+
+.motivation-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 16px;
+
+  &__left {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    flex: 1;
+  }
+
+  &__icon {
+    font-size: 1.5rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+}
+
+// Vorschau der eingetippten Botschaft
+.motivation-preview {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+
+  &__quote {
+    font-family: Georgia, serif;
+    font-size: 2.5rem;
+    line-height: 0.8;
+    color: rgba(255,255,255,0.3);
+    flex-shrink: 0;
+
+    &--close {
+      align-self: flex-end;
+      margin-bottom: -8px;
+    }
+  }
+
+  &__text {
+    flex: 1;
+    margin: 0;
+    font-size: 0.95rem;
+    font-style: italic;
+    color: #e0e7ff;
+    line-height: 1.6;
+    font-weight: 500;
+  }
+}
+
+.motivation-textarea {
+  background: #fff;
+  border-color: #c7d2fe;
+  resize: vertical;
+  min-height: 90px;
+
+  &:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+  }
+}
+
+.motivation-char-count {
+  text-align: right;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.btn--motivation {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: #fff;
+  border-color: #4f46e5;
+  box-shadow: 0 4px 14px rgba(79,70,229,0.25);
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #4338ca, #4f46e5);
+    box-shadow: 0 6px 18px rgba(79,70,229,0.35);
+  }
+}
+
+.spinner--dark {
+  border-color: rgba(79,70,229,0.2);
+  border-top-color: #4f46e5;
+}

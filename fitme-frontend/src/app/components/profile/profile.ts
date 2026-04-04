@@ -19,30 +19,36 @@ export class Profile implements OnInit {
   profile: UserProfile | null = null;
 
   // Edit form
-  editUsername = '';
-  editEmail = '';
-  editAge: number | null = null;
+  editUsername     = '';
+  editEmail        = '';
+  editAge:      number | null = null;
   editWeightKg: number | null = null;
   editHeightCm: number | null = null;
   editFitnessLevel = 'BEGINNER';
+
+  // Motivations-Nachricht
+  editMotivationalMessage = '';
 
   // Password form
   oldPassword = '';
   newPassword = '';
 
-  isLoadingProfile = true;
-  isSavingProfile = false;
+  isLoadingProfile   = true;
+  isSavingProfile    = false;
   isChangingPassword = false;
+  isSavingMotivation = false;
 
-  profileError: string | null = null;
-  profileSuccess: string | null = null;
-  passwordError: string | null = null;
+  profileError:    string | null = null;
+  profileSuccess:  string | null = null;
+  passwordError:   string | null = null;
   passwordSuccess: string | null = null;
+  motivationError:   string | null = null;
+  motivationSuccess: string | null = null;
 
   readonly fitnessLevels = [
-    { value: 'BEGINNER', label: 'Anfänger' },
+    { value: 'BEGINNER',     label: 'Anfänger' },
     { value: 'INTERMEDIATE', label: 'Fortgeschritten' },
-    { value: 'ADVANCED', label: 'Experte' }
+    { value: 'ADVANCED',     label: 'Experte' }
   ];
 
   constructor(
@@ -58,14 +64,15 @@ export class Profile implements OnInit {
     this.isLoadingProfile = true;
     this.trainingService.getProfile().subscribe({
       next: p => {
-        this.profile = p;
-        this.editUsername = p.username;
-        this.editEmail = p.email;
-        this.editAge = p.age || null;
-        this.editWeightKg = p.weightKg || null;
-        this.editHeightCm = p.heightCm || null;
-        this.editFitnessLevel = p.fitnessLevel || 'BEGINNER';
-        this.isLoadingProfile = false;
+        this.profile              = p;
+        this.editUsername         = p.username;
+        this.editEmail            = p.email;
+        this.editAge              = p.age || null;
+        this.editWeightKg         = p.weightKg || null;
+        this.editHeightCm         = p.heightCm || null;
+        this.editFitnessLevel     = p.fitnessLevel || 'BEGINNER';
+        this.editMotivationalMessage = p.motivationalMessage ?? '';
+        this.isLoadingProfile     = false;
       },
       error: () => { this.isLoadingProfile = false; }
     });
@@ -73,25 +80,45 @@ export class Profile implements OnInit {
 
   saveProfile(): void {
     this.isSavingProfile = true;
-    this.profileError = null;
-    this.profileSuccess = null;
+    this.profileError    = null;
+    this.profileSuccess  = null;
 
     this.trainingService.updateProfile({
-      username: this.editUsername || undefined,
-      email: this.editEmail || undefined,
-      age: this.editAge ?? undefined,
-      weightKg: this.editWeightKg ?? undefined,
-      heightCm: this.editHeightCm ?? undefined,
+      username:     this.editUsername    || undefined,
+      email:        this.editEmail       || undefined,
+      age:          this.editAge         ?? undefined,
+      weightKg:     this.editWeightKg    ?? undefined,
+      heightCm:     this.editHeightCm    ?? undefined,
       fitnessLevel: this.editFitnessLevel
     }).subscribe({
       next: p => {
-        this.profile = p;
+        this.profile        = p;
         this.profileSuccess = 'Profil erfolgreich gespeichert.';
         this.isSavingProfile = false;
       },
       error: err => {
-        this.profileError = err.error?.message ?? 'Profil konnte nicht gespeichert werden.';
+        this.profileError   = err.error?.message ?? 'Profil konnte nicht gespeichert werden.';
         this.isSavingProfile = false;
+      }
+    });
+  }
+
+  saveMotivationalMessage(): void {
+    this.isSavingMotivation  = true;
+    this.motivationError     = null;
+    this.motivationSuccess   = null;
+
+    this.trainingService.updateProfile({
+      motivationalMessage: this.editMotivationalMessage.trim() || undefined
+    }).subscribe({
+      next: p => {
+        this.profile             = p;
+        this.motivationSuccess   = 'Deine Botschaft wurde gespeichert ✓';
+        this.isSavingMotivation  = false;
+      },
+      error: err => {
+        this.motivationError    = err.error?.message ?? 'Botschaft konnte nicht gespeichert werden.';
+        this.isSavingMotivation = false;
       }
     });
   }
@@ -99,18 +126,18 @@ export class Profile implements OnInit {
   changePassword(): void {
     if (!this.oldPassword || !this.newPassword) return;
     this.isChangingPassword = true;
-    this.passwordError = null;
-    this.passwordSuccess = null;
+    this.passwordError      = null;
+    this.passwordSuccess    = null;
 
     this.trainingService.changePassword(this.oldPassword, this.newPassword).subscribe({
       next: res => {
-        this.passwordSuccess = res.message;
-        this.oldPassword = '';
-        this.newPassword = '';
+        this.passwordSuccess    = res.message;
+        this.oldPassword        = '';
+        this.newPassword        = '';
         this.isChangingPassword = false;
       },
       error: err => {
-        this.passwordError = err.error?.message ?? 'Passwort konnte nicht geändert werden.';
+        this.passwordError      = err.error?.message ?? 'Passwort konnte nicht geändert werden.';
         this.isChangingPassword = false;
       }
     });

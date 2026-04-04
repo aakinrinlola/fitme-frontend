@@ -40,6 +40,29 @@ export class TrainingPlan implements OnInit {
 
   planId!: number;
 
+  // ── Aufklappbare Mobilitäts-Beschreibungen ────────────────────────────────
+  private expandedDescriptions = new Set<number | string>();
+
+  toggleDescription(id: number | string): void {
+    if (this.expandedDescriptions.has(id)) {
+      this.expandedDescriptions.delete(id);
+    } else {
+      this.expandedDescriptions.add(id);
+    }
+  }
+
+  isDescriptionExpanded(id: number | string): boolean {
+    return this.expandedDescriptions.has(id);
+  }
+
+  expandAllDescriptions(exercises: PlannedExercise[]): void {
+    exercises.forEach((ex, i) => this.expandedDescriptions.add(ex.id ?? i));
+  }
+
+  collapseAllDescriptions(): void {
+    this.expandedDescriptions.clear();
+  }
+
   constructor(
     private route:           ActivatedRoute,
     private router:          Router,
