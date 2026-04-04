@@ -34,21 +34,21 @@ export class TrainingPlanCreate implements OnInit {
   aiDaysPerWeek: number | null = null;
   aiExperienceLevel = '';
 
-  // ── KI-Modus: NEU — Trainingsdauer ──────────────────────────────────────
+  // ── KI-Modus: Trainingsdauer ─────────────────────────────────────────────
   aiSessionDuration: number | null = null;
 
-  // ── KI-Modus: NEU — Muskel-Fokus (Chips + Freitext) ─────────────────────
+  // ── KI-Modus: Muskel-Fokus (Chips + Freitext) ────────────────────────────
   aiFocusMuscleGroups: string[] = [];
   aiFocusMusclesFreetext = '';
 
-  // ── KI-Modus: NEU — Regeneration ────────────────────────────────────────
+  // ── KI-Modus: Regeneration ───────────────────────────────────────────────
   aiSleepHours: number | null = null;
   aiStressLevel = '';
 
-  // ── KI-Modus: NEU — Verletzungen ────────────────────────────────────────
+  // ── KI-Modus: Verletzungen ───────────────────────────────────────────────
   aiInjuries = '';
 
-  // ── KI-Modus: NEU — Mobilitätsplan ──────────────────────────────────────
+  // ── KI-Modus: Mobilitätsplan ─────────────────────────────────────────────
   includeMobilityPlan = false;
 
   // ── Status ───────────────────────────────────────────────────────────────
@@ -83,7 +83,16 @@ export class TrainingPlanCreate implements OnInit {
     { value: 'ADVANCED',     label: 'Experte' },
   ];
 
-  readonly daysOptions = [1, 2, 3, 4, 5, 6, 7];
+  /**
+   * 1 Tag  → Plan A           (gleicher Tag, jede Einheit)
+   * 2 Tage → Plan A + Plan B  (Rotation A / B)
+   * 3 Tage → Plan A + B + C   (Rotation A / B / C)
+   */
+  readonly daysOptions = [
+    { value: 1, label: '1 Tag / Woche  →  1 Trainingsplan (A)' },
+    { value: 2, label: '2 Tage / Woche  →  2 Trainingspläne (A + B)' },
+    { value: 3, label: '3 Tage / Woche  →  3 Trainingspläne (A + B + C)' },
+  ];
 
   readonly fitnessGoals = [
     { value: 'MUSCLE_GAIN',     label: 'Muskelaufbau' },
@@ -147,6 +156,13 @@ export class TrainingPlanCreate implements OnInit {
     return level === 'INTERMEDIATE' || level === 'ADVANCED';
   }
 
+  /** Beschreibung der gewählten Tages-Konfiguration */
+  get selectedDaysDescription(): string {
+    if (!this.aiDaysPerWeek) return '';
+    const opt = this.daysOptions.find(d => d.value === this.aiDaysPerWeek);
+    return opt?.label ?? '';
+  }
+
   // ── Manuelle Übungen ─────────────────────────────────────────────────────
   emptyExercise(): ExerciseInput {
     return { exerciseName: '', sets: 3, reps: 10, weightKg: 0, restSeconds: 90, targetRpe: 7 };
@@ -165,7 +181,6 @@ export class TrainingPlanCreate implements OnInit {
     this.errorMessage   = null;
     this.successMessage = null;
 
-    // Fokus aus Chips + Freitext zusammenführen
     const focusMuscles = [...this.aiFocusMuscleGroups, this.aiFocusMusclesFreetext]
       .filter(Boolean).join(', ') || undefined;
 
@@ -176,7 +191,6 @@ export class TrainingPlanCreate implements OnInit {
       daysPerWeek:            this.aiDaysPerWeek ?? undefined,
       focusMuscles,
       experienceLevel:        this.aiExperienceLevel || undefined,
-      // ── Neue Parameter ──────────────────────────────────────
       sessionDurationMinutes: this.aiSessionDuration ?? undefined,
       sleepHoursPerNight:     this.aiSleepHours ?? undefined,
       stressLevel:            this.aiStressLevel || undefined,

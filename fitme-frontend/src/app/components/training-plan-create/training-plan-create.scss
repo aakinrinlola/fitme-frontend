@@ -238,3 +238,99 @@
   .exercise-row__fields { grid-template-columns: 1fr 1fr; }
   .create-actions { flex-direction: column; .btn { width: 100%; } }
 }
+
+// ── Trainingstage-Auswahl (1 / 2 / 3 Buttons) ──────────────────────────────
+
+.days-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.day-select-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &__num {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #374151;
+    line-height: 1;
+  }
+
+  &__label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &:hover {
+    border-color: #818cf8;
+    background: #eef2ff;
+
+    .day-select-btn__num,
+    .day-select-btn__label { color: #4f46e5; }
+  }
+
+  &--active {
+    border-color: #4f46e5;
+    background: #4f46e5;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+
+    .day-select-btn__num,
+    .day-select-btn__label { color: #fff; }
+
+    &:hover {
+      background: #4338ca;
+      border-color: #4338ca;
+    }
+  }
+}
+
+// Plan-Anzahl-Hinweis unterhalb der Tagesauswahl
+
+.days-info {
+  margin-top: 4px;
+}
+
+.days-info__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  width: 100%;
+
+  &--1 {
+    background: #f0f9ff;
+    border-color: #bae6fd;
+    color: #0369a1;
+  }
+
+  &--2 {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #047857;
+  }
+
+  &--3 {
+    background: #eef2ff;
+    border-color: #c7d2fe;
+    color: #4338ca;
+  }
+}

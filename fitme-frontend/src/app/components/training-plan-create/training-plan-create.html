@@ -46,7 +46,7 @@
         </div>
       </div>
 
-      <!-- 2. Trainingsdauer (NEU) -->
+      <!-- 2. Trainingsdauer -->
       <div class="card">
         <h2 class="card__title">⏱ Trainingsdauer pro Einheit</h2>
         <p class="card__sub">Die KI passt Übungsanzahl und Pausen automatisch an.</p>
@@ -72,7 +72,7 @@
         </div>
       </div>
 
-      <!-- 3. Muskel-Fokus (NEU: Chips + Freitext, ersetzt altes Text-Input) -->
+      <!-- 3. Muskel-Fokus -->
       <div class="card">
         <h2 class="card__title">🎯 Muskel-Fokus</h2>
         <p class="card__sub">Wähle eine oder mehrere Gruppen und ergänze bei Bedarf einen Freitext.</p>
@@ -93,7 +93,7 @@
         </div>
       </div>
 
-      <!-- 4. Regeneration (NEU) -->
+      <!-- 4. Regeneration -->
       <div class="card">
         <h2 class="card__title">😴 Regeneration & Volumen-Toleranz</h2>
         <p class="card__sub">Die KI passt die Satzanzahl und Intensität an deine Erholung an.</p>
@@ -129,7 +129,6 @@
           </div>
         </div>
 
-        <!-- Regenerations-Hinweis -->
         <div class="regen-hint" *ngIf="aiSleepHours !== null || aiStressLevel">
           <span *ngIf="(aiSleepHours !== null && aiSleepHours <= 5) || aiStressLevel === 'HIGH'"
                 class="regen-hint--warn">
@@ -147,7 +146,7 @@
         </div>
       </div>
 
-      <!-- 5. Verletzungen (NEU) -->
+      <!-- 5. Verletzungen -->
       <div class="card">
         <h2 class="card__title">🩹 Verletzungen & Einschränkungen</h2>
         <p class="card__sub">
@@ -165,7 +164,7 @@
         </div>
       </div>
 
-      <!-- 6. Optionale Parameter -->
+      <!-- 6. Weitere Parameter -->
       <div class="card">
         <h2 class="card__title">⚙️ Weitere Parameter</h2>
         <p class="card__sub">Alle Felder sind optional — verbessern aber den Plan deutlich.</p>
@@ -180,13 +179,35 @@
             </select>
           </div>
 
+          <!-- ── GEÄNDERT: Trainingstage — 1 / 2 / 3 mit Plan-Anzahl-Info ── -->
           <div class="form-group">
             <label class="form-label" for="aiDaysPerWeek">Trainingstage / Woche</label>
-            <select id="aiDaysPerWeek" class="form-select"
-                    [(ngModel)]="aiDaysPerWeek" name="aiDaysPerWeek">
-              <option [ngValue]="null">— Nicht angegeben —</option>
-              <option *ngFor="let d of daysOptions" [ngValue]="d">{{ d }} Tag{{ d > 1 ? 'e' : '' }}</option>
-            </select>
+            <div class="days-selector">
+              <button *ngFor="let d of daysOptions"
+                      type="button"
+                      class="day-select-btn"
+                      [class.day-select-btn--active]="aiDaysPerWeek === d.value"
+                      (click)="aiDaysPerWeek = aiDaysPerWeek === d.value ? null : d.value">
+                <span class="day-select-btn__num">{{ d.value }}</span>
+                <span class="day-select-btn__label">
+                  {{ d.value === 1 ? 'Tag' : 'Tage' }}
+                </span>
+              </button>
+            </div>
+            <!-- Plan-Anzahl-Hinweis -->
+            <div class="days-info" *ngIf="aiDaysPerWeek !== null">
+              <ng-container [ngSwitch]="aiDaysPerWeek">
+                <span *ngSwitchCase="1" class="days-info__badge days-info__badge--1">
+                  📋 1 Trainingsplan (Plan A — jeden Tag gleich)
+                </span>
+                <span *ngSwitchCase="2" class="days-info__badge days-info__badge--2">
+                  📋 2 Trainingspläne (Plan A + Plan B — Rotation)
+                </span>
+                <span *ngSwitchCase="3" class="days-info__badge days-info__badge--3">
+                  📋 3 Trainingspläne (Plan A + Plan B + Plan C — Rotation)
+                </span>
+              </ng-container>
+            </div>
           </div>
 
           <div class="form-group">
@@ -199,7 +220,7 @@
         </div>
       </div>
 
-      <!-- 7. Mobilitätsplan (NEU, nur für INTERMEDIATE / ADVANCED) -->
+      <!-- 7. Mobilitätsplan -->
       <div class="mobility-card" *ngIf="showMobilityOption"
            [class.mobility-card--active]="includeMobilityPlan"
            (click)="includeMobilityPlan = !includeMobilityPlan">
