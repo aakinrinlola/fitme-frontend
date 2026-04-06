@@ -143,6 +143,8 @@
         </div>
       </div>
 
+
+
       <!-- 4. Regeneration -->
       <div class="card">
         <h2 class="card__title">😴 Regeneration & Volumen-Toleranz</h2>
@@ -229,7 +231,6 @@
             </select>
           </div>
 
-          <!-- ── GEÄNDERT: Trainingstage — 1 / 2 / 3 mit Plan-Anzahl-Info ── -->
           <div class="form-group">
             <label class="form-label" for="aiDaysPerWeek">Trainingstage / Woche</label>
             <div class="days-selector">
@@ -268,6 +269,51 @@
             </select>
           </div>
         </div>
+      </div>
+
+      <!-- 3b. Fokus-Strategie (erscheint wenn Fokus + ≥2 Tage gewählt) -->
+      <div class="card card--strategy" *ngIf="showFocusStrategy">
+        <h2 class="card__title">⚡ Fokus-Strategie</h2>
+        <p class="card__sub">
+          Du trainierst <strong>{{ aiDaysPerWeek }} Tage</strong> mit Fokus auf
+          <strong>{{ aiFocusMuscleGroups.join(', ') || aiFocusMusclesFreetext }}</strong>.
+          Wie sollen die Tage aufgeteilt werden?
+        </p>
+
+        <div class="strategy-grid">
+
+          <!-- Option A: Fokus verdoppeln -->
+          <button type="button"
+                  class="strategy-btn"
+                  [class.strategy-btn--active]="aiFocusStrategy === 'DOUBLE_FOCUS'"
+                  (click)="aiFocusStrategy = aiFocusStrategy === 'DOUBLE_FOCUS' ? null : 'DOUBLE_FOCUS'">
+            <div class="strategy-btn__top">
+              <span class="strategy-btn__icon">🔥</span>
+              <span class="strategy-btn__check" *ngIf="aiFocusStrategy === 'DOUBLE_FOCUS'">✓</span>
+            </div>
+            <div class="strategy-btn__title">Fokus verdoppeln</div>
+            <div class="strategy-btn__desc">{{ doubleFocusLabel }}</div>
+          </button>
+
+          <!-- Option B: Ausgewogener Split -->
+          <button type="button"
+                  class="strategy-btn"
+                  [class.strategy-btn--active]="aiFocusStrategy === 'BALANCED'"
+                  (click)="aiFocusStrategy = aiFocusStrategy === 'BALANCED' ? null : 'BALANCED'">
+            <div class="strategy-btn__top">
+              <span class="strategy-btn__icon">⚖️</span>
+              <span class="strategy-btn__check" *ngIf="aiFocusStrategy === 'BALANCED'">✓</span>
+            </div>
+            <div class="strategy-btn__title">Ausgewogener Split</div>
+            <div class="strategy-btn__desc">{{ balancedSplitLabel }}</div>
+          </button>
+
+        </div>
+
+        <!-- Hinweis wenn keine Strategie gewählt -->
+        <p class="strategy-hint" *ngIf="!aiFocusStrategy">
+          💡 Keine Auswahl → Standard: Fokus-Tag kommt zuerst, Rest ausgewogen.
+        </p>
       </div>
 
       <!-- 7. Mobilitätsplan -->
@@ -315,7 +361,7 @@
         <span class="generation-hint__icon">⏳</span>
         <p class="generation-hint__text">
           <strong>Kurz Geduld</strong> — um die Qualität deines Plans zu sichern, nimmt sich die KI
-          <strong>2–4 Minuten</strong> Zeit, um dir einen durchdachten, individuellen Trainingsplan zu erstellen.
+          <strong>4-6 Minuten</strong> Zeit, um dir einen durchdachten, individuellen Trainingsplan zu erstellen.
         </p>
       </div>
 

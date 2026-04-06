@@ -77,6 +77,97 @@
   }
 }
 
+// ── Fokus-Strategie Card ────────────────────────────────────────────────────
+.card--strategy {
+  border-color: #c7d2fe;
+  background: linear-gradient(160deg, #fafafe 0%, #f0f0ff 100%);
+}
+
+.strategy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.strategy-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 18px 16px;
+  border-radius: 14px;
+  border: 2px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: #818cf8;
+    background: #eef2ff;
+  }
+
+  &--active {
+    border-color: #4f46e5;
+    background: #eef2ff;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.18);
+  }
+
+  &__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  &__icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  &__check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #4f46e5;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  &__title {
+    font-weight: 800;
+    font-size: 0.92rem;
+    color: #111827;
+    line-height: 1.2;
+  }
+
+  &__desc {
+    font-size: 0.78rem;
+    color: #6b7280;
+    font-weight: 500;
+    line-height: 1.45;
+  }
+
+  &--active &__title { color: #3730a3; }
+  &--active &__desc  { color: #4338ca; }
+}
+
+.strategy-hint {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
 // ── Regeneration ────────────────────────────────────────────────────────────
 .stress-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
@@ -237,10 +328,10 @@
   .stress-grid { grid-template-columns: 1fr; }
   .exercise-row__fields { grid-template-columns: 1fr 1fr; }
   .create-actions { flex-direction: column; .btn { width: 100%; } }
+  .strategy-grid { grid-template-columns: 1fr; }
 }
 
-// ── Trainingstage-Auswahl (1 / 2 / 3 Buttons) ──────────────────────────────
-
+// ── Trainingstage-Auswahl ───────────────────────────────────────────────────
 .days-selector {
   display: flex;
   gap: 10px;
@@ -299,8 +390,6 @@
   }
 }
 
-// Plan-Anzahl-Hinweis unterhalb der Tagesauswahl
-
 .days-info {
   margin-top: 4px;
 }
@@ -316,26 +405,12 @@
   border: 1px solid transparent;
   width: 100%;
 
-  &--1 {
-    background: #f0f9ff;
-    border-color: #bae6fd;
-    color: #0369a1;
-  }
-
-  &--2 {
-    background: #f0fdf4;
-    border-color: #bbf7d0;
-    color: #047857;
-  }
-
-  &--3 {
-    background: #eef2ff;
-    border-color: #c7d2fe;
-    color: #4338ca;
-  }
+  &--1 { background: #f0f9ff; border-color: #bae6fd; color: #0369a1; }
+  &--2 { background: #f0fdf4; border-color: #bbf7d0; color: #047857; }
+  &--3 { background: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
 }
 
-// ── Generierungshinweis unterhalb des Submit-Buttons ─────────────────────────
+// ── Generierungshinweis ───────────────────────────────────────────────────────
 .generation-hint {
   display: flex;
   align-items: flex-start;
@@ -344,15 +419,10 @@
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 14px 16px;
-  margin-top: -8px; // visuell nah am Button
+  margin-top: -8px;
   transition: all 0.3s ease;
 
-  &__icon {
-    font-size: 1rem;
-    margin-top: 1px;
-    flex-shrink: 0;
-    opacity: 0.7;
-  }
+  &__icon { font-size: 1rem; margin-top: 1px; flex-shrink: 0; opacity: 0.7; }
 
   &__text {
     margin: 0;
@@ -363,7 +433,6 @@
     strong { color: #374151; }
   }
 
-  // Wenn die Generierung läuft → stärker hervorheben
   &--active {
     background: #eef2ff;
     border-color: #c7d2fe;
@@ -392,16 +461,11 @@
     gap: 8px;
   }
 
-  &__info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+  &__info { display: flex; align-items: center; gap: 10px; }
 
   &__count {
     font-size: 0.88rem;
     font-weight: 700;
-
     &--ok      { color: #047857; }
     &--warning { color: #b91c1c; }
   }
@@ -412,23 +476,11 @@
     padding: 3px 10px;
     border-radius: 99px;
 
-    &--premium {
-      background: #fef9c3;
-      border: 1px solid #fde68a;
-      color: #92400e;
-    }
-
-    &--admin {
-      background: #eef2ff;
-      border: 1px solid #c7d2fe;
-      color: #4338ca;
-    }
+    &--premium { background: #fef9c3; border: 1px solid #fde68a; color: #92400e; }
+    &--admin   { background: #eef2ff; border: 1px solid #c7d2fe; color: #4338ca; }
   }
 
-  &__reset {
-    font-size: 0.78rem;
-    color: #9ca3af;
-  }
+  &__reset { font-size: 0.78rem; color: #9ca3af; }
 
   &__upgrade {
     font-size: 0.82rem;
@@ -438,11 +490,7 @@
     border-radius: 8px;
     padding: 8px 12px;
 
-    &--premium {
-      color: #92400e;
-      background: #fffbeb;
-      border-color: #fde68a;
-    }
+    &--premium { color: #92400e; background: #fffbeb; border-color: #fde68a; }
   }
 }
 

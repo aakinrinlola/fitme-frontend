@@ -38,10 +38,11 @@ export class TrainingPlanCreate implements OnInit {
   aiInjuries = '';
   includeMobilityPlan = false;
 
-  // ── NEU: Plan-Limit ────────────────────────────────────────────
+  /** Fokus-Strategie: null = kein Auswahl, 'DOUBLE_FOCUS' = 2 Fokus-Tage, 'BALANCED' = klassischer Split */
+  aiFocusStrategy: 'DOUBLE_FOCUS' | 'BALANCED' | null = null;
+
   planLimitInfo: PlanLimitInfo | null = null;
   isLoadingLimit = false;
-  // ───────────────────────────────────────────────────────────────
 
   isLoading      = false;
   errorMessage:   string | null = null;
@@ -104,20 +105,15 @@ export class TrainingPlanCreate implements OnInit {
       },
       error: () => { this.currentUser = this.authService.getCurrentUser(); }
     });
-
-    // ── NEU: Limit laden ─────────────────────────────────────────
     this.loadPlanLimit();
-    // ────────────────────────────────────────────────────────────
   }
 
-  // ── NEU: Limit-Methoden ────────────────────────────────────────
+  // ── Plan-Limit ─────────────────────────────────────────────────────────────
+
   loadPlanLimit(): void {
     this.isLoadingLimit = true;
     this.trainingService.getPlanLimit().subscribe({
-      next: info => {
-        this.planLimitInfo = info;
-        this.isLoadingLimit = false;
-      },
+      next: info => { this.planLimitInfo = info; this.isLoadingLimit = false; },
       error: () => { this.isLoadingLimit = false; }
     });
   }
@@ -127,13 +123,8 @@ export class TrainingPlanCreate implements OnInit {
     return Math.min((this.planLimitInfo.used / this.planLimitInfo.limit) * 100, 100);
   }
 
-  get isPremium(): boolean {
-    return this.planLimitInfo?.role === 'PREMIUM';
-  }
-
-  get isAdmin(): boolean {
-    return this.planLimitInfo?.role === 'ADMIN';
-  }
+  get isPremium(): boolean { return this.planLimitInfo?.role === 'PREMIUM'; }
+  get isAdmin(): boolean   { return this.planLimitInfo?.role === 'ADMIN'; }
 
   get isLimitReached(): boolean {
     if (!this.planLimitInfo || this.planLimitInfo.limit === -1) return false;
@@ -146,7 +137,37 @@ export class TrainingPlanCreate implements OnInit {
       day: '2-digit', month: '2-digit', year: 'numeric'
     });
   }
-  // ───────────────────────────────────────────────────────────────
+
+  // ── Fokus-Strategie ────────────────────────────────────────────────────────
+
+  /**
+   * Zeigt die Strategie-Auswahl, wenn mind. eine Fokus-Muskelgruppe
+   * gewählt ist UND mind. 2 Trainingstage ausgewählt sind.
+   */
+  get showFocusStrategy(): boolean {
+    return (this.aiFocusMuscleGroups.length > 0 || !!this.aiFocusMusclesFreetext?.trim())
+      && (this.aiDaysPerWeek ?? 0) >= 2;
+  }
+
+  /** Beschriftung für DOUBLE_FOCUS — dynamisch nach Fokus + Tagesanzahl */
+  get doubleFocusLabel(): string {
+    const days  = this.aiDaysPerWeek ?? 3;
+    const focus = this.aiFocusMuscleGroups[0] ?? 'Fokus';
+    if (days >= 3) {
+      return `2 ${focus}-Tage (Quad & Hinge oder Kraft & Hypertrophie) + 1 anderer Tag`;
+    }
+    return `2 ${focus}-Tage mit unterschiedlichem Schwerpunkt`;
+  }
+
+  /** Beschriftung für BALANCED */
+  get balancedSplitLabel(): string {
+    const days = this.aiDaysPerWeek ?? 3;
+    return days >= 3
+      ? 'Klassischer Split (z.B. Push / Pull / Beine) — Fokus-Tag kommt zuerst'
+      : '1 Fokus-Tag + 1 ausgewogener Ganzkörper-Tag';
+  }
+
+  // ── Modus ──────────────────────────────────────────────────────────────────
 
   setMode(m: Mode): void {
     this.mode = m;
@@ -156,19 +177,22 @@ export class TrainingPlanCreate implements OnInit {
   }
 
   private resetAiFields(): void {
-    this.aiSessionDuration    = null;
-    this.aiFocusMuscleGroups  = [];
+    this.aiSessionDuration     = null;
+    this.aiFocusMuscleGroups   = [];
     this.aiFocusMusclesFreetext = '';
-    this.aiSleepHours         = null;
-    this.aiStressLevel        = '';
-    this.aiInjuries           = '';
-    this.includeMobilityPlan  = false;
+    this.aiSleepHours          = null;
+    this.aiStressLevel         = '';
+    this.aiInjuries            = '';
+    this.includeMobilityPlan   = false;
+    this.aiFocusStrategy       = null;
   }
 
   toggleMuscleGroup(muscle: string): void {
     const idx = this.aiFocusMuscleGroups.indexOf(muscle);
     if (idx >= 0) this.aiFocusMuscleGroups.splice(idx, 1);
     else          this.aiFocusMuscleGroups.push(muscle);
+    // Strategie zurücksetzen wenn kein Fokus mehr aktiv
+    if (!this.showFocusStrategy) this.aiFocusStrategy = null;
   }
 
   isMuscleGroupSelected(muscle: string): boolean {
@@ -183,21 +207,20 @@ export class TrainingPlanCreate implements OnInit {
   emptyExercise(): ExerciseInput {
     return { exerciseName: '', sets: 3, reps: 10, weightKg: 0, restSeconds: 90, targetRpe: 7 };
   }
-  addExercise(): void { this.exercises.push(this.emptyExercise()); }
-  removeExercise(index: number): void { if (this.exercises.length > 1) this.exercises.splice(index, 1); }
+  addExercise(): void    { this.exercises.push(this.emptyExercise()); }
+  removeExercise(i: number): void { if (this.exercises.length > 1) this.exercises.splice(i, 1); }
+
+  // ── KI-Generierung ─────────────────────────────────────────────────────────
 
   onGenerateSubmit(): void {
     if (!this.aiPlanName.trim() || !this.aiUserPrompt.trim()) {
       this.errorMessage = 'Bitte gib einen Plannamen und eine Beschreibung ein.';
       return;
     }
-
-    // ── NEU: Limit-Check im Frontend ────────────────────────────
     if (this.isLimitReached) {
       this.errorMessage = `Monatliches Limit erreicht. Nächste Pläne wieder ab ${this.limitResetDate} möglich.`;
       return;
     }
-    // ────────────────────────────────────────────────────────────
 
     this.isLoading      = true;
     this.errorMessage   = null;
@@ -220,13 +243,14 @@ export class TrainingPlanCreate implements OnInit {
       focusMuscleGroups:      this.aiFocusMuscleGroups.length > 0 ? [...this.aiFocusMuscleGroups] : undefined,
       focusMusclesFreetext:   this.aiFocusMusclesFreetext || undefined,
       includeMobilityPlan:    this.includeMobilityPlan || undefined,
+      focusStrategy:          this.aiFocusStrategy ?? undefined,
     };
 
     this.trainingService.generatePlanWithAi(request).subscribe({
       next: (res) => {
         this.successMessage = `${res.message} (${res.exerciseCount} Übungen)`;
         this.isLoading = false;
-        this.loadPlanLimit(); // ← NEU: Limit nach Generierung aktualisieren
+        this.loadPlanLimit();
         setTimeout(() => this.router.navigate(['/training-plan', res.id]), 1200);
       },
       error: (err) => {
@@ -238,6 +262,8 @@ export class TrainingPlanCreate implements OnInit {
       }
     });
   }
+
+  // ── Manueller Plan ─────────────────────────────────────────────────────────
 
   onSubmit(): void {
     if (!this.planName.trim() || this.exercises.some(e => !e.exerciseName.trim())) {
