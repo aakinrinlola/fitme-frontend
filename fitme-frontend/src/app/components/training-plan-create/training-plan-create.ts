@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TrainingService } from '../../services/training.service';
 import { AuthService } from '../../services/auth.service';
-import { ExerciseInput, GeneratePlanRequest } from '../../models/training.model';
+import { ExerciseInput, GeneratePlanRequest, PlanLimitInfo } from '../../models/training.model';
 import { UserInfo } from '../../models/auth.model';
 
 type Mode = 'manual' | 'ai';
@@ -19,44 +19,34 @@ type Mode = 'manual' | 'ai';
 export class TrainingPlanCreate implements OnInit {
   mode: Mode = 'manual';
 
-  // ── Manueller Modus ─────────────────────────────────────────────────────
   planName    = '';
   description = '';
   exercises: ExerciseInput[] = [this.emptyExercise()];
 
-  // ── Auth ─────────────────────────────────────────────────────────────────
   currentUser: UserInfo | null = null;
 
-  // ── KI-Modus: Basis ──────────────────────────────────────────────────────
   aiPlanName   = '';
   aiUserPrompt = '';
   aiGoal       = '';
   aiDaysPerWeek: number | null = null;
   aiExperienceLevel = '';
-
-  // ── KI-Modus: Trainingsdauer ─────────────────────────────────────────────
   aiSessionDuration: number | null = null;
-
-  // ── KI-Modus: Muskel-Fokus (Chips + Freitext) ────────────────────────────
   aiFocusMuscleGroups: string[] = [];
   aiFocusMusclesFreetext = '';
-
-  // ── KI-Modus: Regeneration ───────────────────────────────────────────────
   aiSleepHours: number | null = null;
   aiStressLevel = '';
-
-  // ── KI-Modus: Verletzungen ───────────────────────────────────────────────
   aiInjuries = '';
-
-  // ── KI-Modus: Mobilitätsplan ─────────────────────────────────────────────
   includeMobilityPlan = false;
 
-  // ── Status ───────────────────────────────────────────────────────────────
+  // ── NEU: Plan-Limit ────────────────────────────────────────────
+  planLimitInfo: PlanLimitInfo | null = null;
+  isLoadingLimit = false;
+  // ───────────────────────────────────────────────────────────────
+
   isLoading      = false;
   errorMessage:   string | null = null;
   successMessage: string | null = null;
 
-  // ── Dropdown-Optionen ────────────────────────────────────────────────────
   readonly durationOptions = [
     { value: 30, label: '30 min' },
     { value: 45, label: '45 min' },
@@ -70,11 +60,11 @@ export class TrainingPlanCreate implements OnInit {
   ];
 
   readonly sleepOptions = [
-    { value: 5,  label: '≤ 5h — wenig Schlaf' },
-    { value: 6,  label: '6h' },
-    { value: 7,  label: '7h' },
-    { value: 8,  label: '8h' },
-    { value: 9,  label: '≥ 9h — viel Schlaf' },
+    { value: 5, label: '≤ 5h — wenig Schlaf' },
+    { value: 6, label: '6h' },
+    { value: 7, label: '7h' },
+    { value: 8, label: '8h' },
+    { value: 9, label: '≥ 9h — viel Schlaf' },
   ];
 
   readonly experienceLevels = [
@@ -83,15 +73,10 @@ export class TrainingPlanCreate implements OnInit {
     { value: 'ADVANCED',     label: 'Experte' },
   ];
 
-  /**
-   * 1 Tag  → Plan A           (gleicher Tag, jede Einheit)
-   * 2 Tage → Plan A + Plan B  (Rotation A / B)
-   * 3 Tage → Plan A + B + C   (Rotation A / B / C)
-   */
   readonly daysOptions = [
-    { value: 1, label: '1 Tag / Woche  →  1 Trainingsplan (A)' },
-    { value: 2, label: '2 Tage / Woche  →  2 Trainingspläne (A + B)' },
-    { value: 3, label: '3 Tage / Woche  →  3 Trainingspläne (A + B + C)' },
+    { value: 1 },
+    { value: 2 },
+    { value: 3 },
   ];
 
   readonly fitnessGoals = [
@@ -119,9 +104,50 @@ export class TrainingPlanCreate implements OnInit {
       },
       error: () => { this.currentUser = this.authService.getCurrentUser(); }
     });
+
+    // ── NEU: Limit laden ─────────────────────────────────────────
+    this.loadPlanLimit();
+    // ────────────────────────────────────────────────────────────
   }
 
-  // ── Modus-Toggle ─────────────────────────────────────────────────────────
+  // ── NEU: Limit-Methoden ────────────────────────────────────────
+  loadPlanLimit(): void {
+    this.isLoadingLimit = true;
+    this.trainingService.getPlanLimit().subscribe({
+      next: info => {
+        this.planLimitInfo = info;
+        this.isLoadingLimit = false;
+      },
+      error: () => { this.isLoadingLimit = false; }
+    });
+  }
+
+  get limitPercent(): number {
+    if (!this.planLimitInfo || this.planLimitInfo.limit === -1) return 0;
+    return Math.min((this.planLimitInfo.used / this.planLimitInfo.limit) * 100, 100);
+  }
+
+  get isPremium(): boolean {
+    return this.planLimitInfo?.role === 'PREMIUM';
+  }
+
+  get isAdmin(): boolean {
+    return this.planLimitInfo?.role === 'ADMIN';
+  }
+
+  get isLimitReached(): boolean {
+    if (!this.planLimitInfo || this.planLimitInfo.limit === -1) return false;
+    return this.planLimitInfo.remaining <= 0;
+  }
+
+  get limitResetDate(): string {
+    if (!this.planLimitInfo) return '';
+    return new Date(this.planLimitInfo.resetsAt).toLocaleDateString('de-DE', {
+      day: '2-digit', month: '2-digit', year: 'numeric'
+    });
+  }
+  // ───────────────────────────────────────────────────────────────
+
   setMode(m: Mode): void {
     this.mode = m;
     this.errorMessage   = null;
@@ -139,7 +165,6 @@ export class TrainingPlanCreate implements OnInit {
     this.includeMobilityPlan  = false;
   }
 
-  // ── Fokus-Chips ──────────────────────────────────────────────────────────
   toggleMuscleGroup(muscle: string): void {
     const idx = this.aiFocusMuscleGroups.indexOf(muscle);
     if (idx >= 0) this.aiFocusMuscleGroups.splice(idx, 1);
@@ -150,32 +175,29 @@ export class TrainingPlanCreate implements OnInit {
     return this.aiFocusMuscleGroups.includes(muscle);
   }
 
-  // ── Mobility-Toggle nur für INTERMEDIATE / ADVANCED ──────────────────────
   get showMobilityOption(): boolean {
     const level = (this.aiExperienceLevel || this.currentUser?.fitnessLevel || '').toUpperCase();
     return level === 'INTERMEDIATE' || level === 'ADVANCED';
   }
 
-  /** Beschreibung der gewählten Tages-Konfiguration */
-  get selectedDaysDescription(): string {
-    if (!this.aiDaysPerWeek) return '';
-    const opt = this.daysOptions.find(d => d.value === this.aiDaysPerWeek);
-    return opt?.label ?? '';
-  }
-
-  // ── Manuelle Übungen ─────────────────────────────────────────────────────
   emptyExercise(): ExerciseInput {
     return { exerciseName: '', sets: 3, reps: 10, weightKg: 0, restSeconds: 90, targetRpe: 7 };
   }
   addExercise(): void { this.exercises.push(this.emptyExercise()); }
   removeExercise(index: number): void { if (this.exercises.length > 1) this.exercises.splice(index, 1); }
 
-  // ── KI-Plan generieren ───────────────────────────────────────────────────
   onGenerateSubmit(): void {
     if (!this.aiPlanName.trim() || !this.aiUserPrompt.trim()) {
       this.errorMessage = 'Bitte gib einen Plannamen und eine Beschreibung ein.';
       return;
     }
+
+    // ── NEU: Limit-Check im Frontend ────────────────────────────
+    if (this.isLimitReached) {
+      this.errorMessage = `Monatliches Limit erreicht. Nächste Pläne wieder ab ${this.limitResetDate} möglich.`;
+      return;
+    }
+    // ────────────────────────────────────────────────────────────
 
     this.isLoading      = true;
     this.errorMessage   = null;
@@ -204,19 +226,19 @@ export class TrainingPlanCreate implements OnInit {
       next: (res) => {
         this.successMessage = `${res.message} (${res.exerciseCount} Übungen)`;
         this.isLoading = false;
+        this.loadPlanLimit(); // ← NEU: Limit nach Generierung aktualisieren
         setTimeout(() => this.router.navigate(['/training-plan', res.id]), 1200);
       },
       error: (err) => {
         const status = err?.status;
         this.errorMessage = status === 404
-          ? 'KI-Endpoint nicht gefunden. Bitte Backend prüfen.'
+          ? 'KI-Endpoint nicht gefunden.'
           : err.error?.message ?? `KI-Generierung fehlgeschlagen (Status: ${status ?? '?'}).`;
         this.isLoading = false;
       }
     });
   }
 
-  // ── Manuellen Plan erstellen ─────────────────────────────────────────────
   onSubmit(): void {
     if (!this.planName.trim() || this.exercises.some(e => !e.exerciseName.trim())) {
       this.errorMessage = 'Bitte fülle alle Pflichtfelder aus.';

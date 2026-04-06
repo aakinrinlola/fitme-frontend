@@ -165,3 +165,11 @@ export interface UserProfile {
   createdAt: string;
   motivationalMessage?: string;
 }
+
+export interface PlanLimitInfo {
+  used: number;
+  limit: number;
+  remaining: number;
+  role: string;
+  resetsAt: string;
+}

@@ -18,6 +18,56 @@
             (click)="setMode('ai')">🤖 Mit KI generieren</button>
   </div>
 
+  <!-- ── Plan-Limit Banner (nur im KI-Modus) ─────────────────── -->
+  <div class="limit-banner" *ngIf="planLimitInfo && mode === 'ai'">
+
+    <div class="limit-banner__header">
+      <div class="limit-banner__info">
+      <span class="limit-banner__count"
+            [class.limit-banner__count--warning]="planLimitInfo.remaining <= 1 && !isAdmin"
+            [class.limit-banner__count--ok]="planLimitInfo.remaining > 1 || isAdmin">
+        <ng-container *ngIf="!isAdmin">
+          {{ planLimitInfo.used }} / {{ planLimitInfo.limit }} KI-Pläne diesen Monat
+        </ng-container>
+        <ng-container *ngIf="isAdmin">
+          ∞ KI-Pläne (Admin)
+        </ng-container>
+      </span>
+        <span class="limit-banner__role limit-banner__role--premium" *ngIf="isPremium">
+        ⭐ Premium
+      </span>
+        <span class="limit-banner__role limit-banner__role--admin" *ngIf="isAdmin">
+        🔑 Admin
+      </span>
+      </div>
+      <span class="limit-banner__reset" *ngIf="!isAdmin">
+      Reset am {{ limitResetDate }}
+    </span>
+    </div>
+
+    <!-- Fortschrittsbalken -->
+    <div class="limit-bar" *ngIf="!isAdmin">
+      <div class="limit-bar__fill"
+           [style.width.%]="limitPercent"
+           [class.limit-bar__fill--warning]="planLimitInfo.remaining <= 1"
+           [class.limit-bar__fill--ok]="planLimitInfo.remaining > 1">
+      </div>
+    </div>
+
+    <!-- Limit erreicht -->
+    <div class="limit-banner__upgrade" *ngIf="isLimitReached && !isPremium">
+      ⚠ Monatliches Limit erreicht —
+      <strong>{{ planLimitInfo.limit }} Pläne</strong> für Free-Nutzer.
+      Nächste Pläne ab <strong>{{ limitResetDate }}</strong>.
+    </div>
+    <div class="limit-banner__upgrade limit-banner__upgrade--premium"
+         *ngIf="isLimitReached && isPremium">
+      ⚠ Premium-Limit ({{ planLimitInfo.limit }} Pläne) erreicht.
+      Reset am <strong>{{ limitResetDate }}</strong>.
+    </div>
+
+  </div>
+
   <div *ngIf="errorMessage"   class="alert alert--error">⚠ {{ errorMessage }}</div>
   <div *ngIf="successMessage" class="alert alert--success">✓ {{ successMessage }}</div>
 

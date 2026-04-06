@@ -7,7 +7,7 @@ import {
   TrainingPlanSummary, TrainingPlanDetail,
   SessionFeedbackRequest, SessionFeedbackResponse,
   SessionHistoryEntry, UpdateProfileRequest, UserProfile,
-  FeedbackAvailability
+  FeedbackAvailability, PlanLimitInfo
 } from '../models/training.model';
 
 export interface GeneratePlanResponse {
@@ -88,6 +88,10 @@ export class TrainingService {
     return this.http.put<{ message: string }>(
       `${this.baseUrl}/users/me/password`, { oldPassword, newPassword }
     );
+  }
+
+  getPlanLimit(): Observable<PlanLimitInfo> {
+    return this.http.get<PlanLimitInfo>(`${this.baseUrl}/users/me/plan-limit`);
   }
 
 
