@@ -27,12 +27,6 @@ export interface GeneratePlanRequest {
   focusMuscleGroups?: string[];
   focusMusclesFreetext?: string;
   includeMobilityPlan?: boolean;
-  /**
-   * Steuert die Verteilung der Fokus-Muskelgruppen auf die Trainingstage.
-   * 'DOUBLE_FOCUS' → Fokus bekommt 2 Trainingstage mit unterschiedlichem Schwerpunkt.
-   * 'BALANCED'     → Klassischer Split (z.B. Push/Pull/Legs), Fokus-Tag kommt zuerst.
-   * null           → Standard (= BALANCED)
-   */
   focusStrategy?: 'DOUBLE_FOCUS' | 'BALANCED';
 }
 
@@ -148,6 +142,7 @@ export interface UpdateProfileRequest {
   heightCm?: number;
   fitnessLevel?: string;
   motivationalMessage?: string;
+  showBodyScanInDashboard?: boolean;
 }
 
 export interface UserProfile {
@@ -161,6 +156,8 @@ export interface UserProfile {
   heightCm: number;
   createdAt: string;
   motivationalMessage?: string;
+  showBodyScanInDashboard: boolean;
+  hasBodyScanData: boolean;
 }
 
 export interface PlanLimitInfo {
@@ -170,3 +167,78 @@ export interface PlanLimitInfo {
   role: string;
   resetsAt: string;
 }
+
+// ── Body Scan ──────────────────────────────────────────────────────────────────
+
+/** Ein einzelner Messwert-Satz (eine Zeile im Eintrag). */
+export interface BodyScanEntry {
+  id: number;
+  measuredAt: string;           // ISO-Date "2025-03-01"
+
+  // Körperkomposition
+  bmi:               number | null;
+  bodyFatPercent:    number | null;   // Fettmasse %
+  bodyFatKg:         number | null;   // Fettmasse kg
+  leanMassPercent:   number | null;   // Fettfreie Masse %
+  bodyWaterPercent:  number | null;   // Körperwasser %
+  visceralFatKg:     number | null;   // Viszerales Fett kg
+
+  // Bioimpedanz / Vitalwerte
+  phaseAngle:        number | null;   // Phasenwinkel
+  oxygenSaturation:  number | null;   // Sauerstoffsättigung %
+
+  // Segmentale Muskelwerte (kg)
+  muscleKgTorso:     number | null;
+  muscleKgArmRight:  number | null;
+  muscleKgArmLeft:   number | null;
+  muscleKgLegRight:  number | null;
+  muscleKgLegLeft:   number | null;
+}
+
+/** Request-Modell zum Speichern eines neuen Eintrags. */
+export interface BodyScanRequest {
+  measuredAt: string;           // ISO-Date "2025-03-01"
+
+  bmi?:               number;
+  bodyFatPercent?:    number;
+  bodyFatKg?:         number;
+  leanMassPercent?:   number;
+  bodyWaterPercent?:  number;
+  visceralFatKg?:     number;
+  phaseAngle?:        number;
+  oxygenSaturation?:  number;
+  muscleKgTorso?:     number;
+  muscleKgArmRight?:  number;
+  muscleKgArmLeft?:   number;
+  muscleKgLegRight?:  number;
+  muscleKgLegLeft?:   number;
+}
+
+/**
+ * Metadaten für eine Tabellenzeile in der Vergleichsansicht.
+ * Definiert Label, Einheit und Bewertungsrichtung.
+ */
+export interface BodyScanRowMeta {
+  key:      keyof BodyScanEntry;
+  label:    string;
+  unit:     string;
+  /** 'less' = weniger ist besser | 'more' = mehr ist besser | 'neutral' = keine Bewertung */
+  direction: 'less' | 'more' | 'neutral';
+}
+
+/** Alle Zeilendefinitionen in der kanonischen Anzeigereihenfolge. */
+export const BODY_SCAN_ROWS: BodyScanRowMeta[] = [
+  { key: 'bmi',              label: 'BMI',                    unit: '',    direction: 'neutral' },
+  { key: 'bodyFatPercent',   label: 'Fettmasse',              unit: '%',   direction: 'less'    },
+  { key: 'bodyFatKg',        label: 'Fettmasse',              unit: 'kg',  direction: 'less'    },
+  { key: 'leanMassPercent',  label: 'Fettfreie Masse',        unit: '%',   direction: 'more'    },
+  { key: 'bodyWaterPercent', label: 'Körperwasser',           unit: '%',   direction: 'more'    },
+  { key: 'visceralFatKg',    label: 'Viszerales Fett',        unit: 'kg',  direction: 'less'    },
+  { key: 'phaseAngle',       label: 'Phasenwinkel',           unit: '°',   direction: 'more'    },
+  { key: 'oxygenSaturation', label: 'Sauerstoffsättigung',    unit: '%',   direction: 'more'    },
+  { key: 'muscleKgTorso',    label: 'Muskelmasse Torso',      unit: 'kg',  direction: 'more'    },
+  { key: 'muscleKgArmRight', label: 'Muskelmasse Arm re.',    unit: 'kg',  direction: 'more'    },
+  { key: 'muscleKgArmLeft',  label: 'Muskelmasse Arm li.',    unit: 'kg',  direction: 'more'    },
+  { key: 'muscleKgLegRight', label: 'Muskelmasse Bein re.',   unit: 'kg',  direction: 'more'    },
+  { key: 'muscleKgLegLeft',  label: 'Muskelmasse Bein li.',   unit: 'kg',  direction: 'more'    },
+];

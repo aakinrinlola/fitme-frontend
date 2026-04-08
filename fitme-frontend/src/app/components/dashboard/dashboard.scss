@@ -1,3 +1,5 @@
+// ── Bestehende Styles (unverändert) ──────────────────────────────────────────
+
 .dashboard-page {
   display: flex;
   flex-direction: column;
@@ -69,12 +71,11 @@
 
   &:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); }
 
-  &__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-  &__name   { font-weight: 700; font-size: 0.95rem; color: #111827; }
-  &__meta   { display: flex; flex-direction: column; gap: 4px; font-size: 0.83rem; color: #6b7280; font-weight: 500; }
+  &__header  { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  &__name    { font-weight: 700; font-size: 0.95rem; color: #111827; }
+  &__meta    { display: flex; flex-direction: column; gap: 4px; font-size: 0.83rem; color: #6b7280; font-weight: 500; }
   &__actions { display: flex; gap: 8px; margin-top: auto; flex-wrap: wrap; }
 
-  // Wochenanzeige
   &__week {
     font-size: 0.78rem;
     font-weight: 600;
@@ -94,7 +95,6 @@
     &--expired { color: #b91c1c; }
   }
 
-  // Feedback gesperrt
   &__feedback-locked {
     font-size: 0.78rem;
     color: #92400e;
@@ -118,190 +118,179 @@
   white-space: nowrap;
 
   &--active   { background: rgba(16,185,129,0.10); border: 1px solid rgba(16,185,129,0.28); color: #047857; }
-  &--inactive { background: #f3f4f6; border: 1px solid #d1d5db; color: #6b7280; }
+  &--inactive { background: rgba(107,114,128,0.10); border: 1px solid rgba(107,114,128,0.25); color: #4b5563; }
 }
 
-// ── Empty State ────────────────────────────────────────────────────
-.empty-state {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 48px 24px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
+// ── Buttons ─────────────────────────────────────────────────────────
+.btn {
+  display: inline-flex;
   align-items: center;
-  gap: 14px;
-
-  &__icon { font-size: 2.5rem; }
-  &__text { margin: 0; color: #6b7280; font-size: 0.95rem; }
-}
-
-// ── Quick Links ────────────────────────────────────────────────────
-.quick-links {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-
-  @media (max-width: 700px) { grid-template-columns: 1fr; }
-}
-
-.quick-link-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 20px;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 16px;
+  min-height: 40px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
   text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
 
-  &:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99,102,241,0.12); transform: translateY(-1px); }
-  &__icon  { font-size: 1.4rem; }
-  &__label { font-weight: 600; font-size: 0.875rem; color: #111827; }
+  &:hover { transform: translateY(-1px); }
+
+  &--primary   { background: #4f46e5; color: #fff; border-color: #4f46e5; box-shadow: 0 4px 12px rgba(79,70,229,0.18); &:hover { background: #4338ca; } }
+  &--secondary { background: #fff; color: #374151; border-color: #d1d5db; box-shadow: 0 1px 3px rgba(0,0,0,0.05); &:hover { background: #f9fafb; } }
+  &--sm { min-height: 34px; padding: 0 12px; border-radius: 8px; font-size: 0.82rem; }
 }
 
-// ── Loading / Alert ────────────────────────────────────────────────
-.loading-row {
-  display: flex; align-items: center; gap: 12px;
-  color: #6b7280; padding: 24px 0; font-size: 0.9rem;
-}
-
+// ── Alerts ──────────────────────────────────────────────────────────
 .alert {
-  padding: 12px 16px; border-radius: 8px; font-size: 0.88rem; font-weight: 500;
-  &--error { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; }
-  &--success{ background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; }
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  &--error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+}
+
+// ── Loading ──────────────────────────────────────────────────────────
+.loading-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  color: #6b7280;
+
+  &--sm { font-size: 0.84rem; padding: 6px 0; }
 }
 
 .spinner {
-  display: inline-block; width: 18px; height: 18px;
-  border: 2px solid rgba(0,0,0,0.10); border-top-color: #6366f1;
-  border-radius: 50%; animation: spin 0.7s linear infinite;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(99,102,241,0.18);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+
+  &--sm { width: 14px; height: 14px; }
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+// ── Empty State ──────────────────────────────────────────────────────
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+  background: #fff;
+  border: 1px dashed #d1d5db;
+  border-radius: 12px;
+  text-align: center;
 
-// ── Motivations-Banner (Dashboard) ────────────────────────────────────────────
-//    Platzierung: zwischen Plans und Quick Links
+  &__icon { font-size: 2.4rem; }
+  &__text { margin: 0; color: #6b7280; font-size: 0.95rem; }
+}
 
+// ── Quick Links ──────────────────────────────────────────────────────
+.quick-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.quick-link-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: box-shadow 0.2s, transform 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+
+  &:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+
+  &__icon  { font-size: 1.5rem; }
+  &__label { font-size: 0.82rem; font-weight: 700; color: #374151; text-align: center; }
+}
+
+// ── Motivations-Banner ───────────────────────────────────────────────
 .motivation-banner {
-  position: relative;
   display: flex;
   align-items: center;
-  gap: 20px;
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+  gap: 16px;
+  background: linear-gradient(135deg, #312e81 0%, #4f46e5 60%, #7c3aed 100%);
   border-radius: 16px;
-  padding: 24px 28px;
-  overflow: hidden;
+  padding: 20px 24px;
+  box-shadow: 0 8px 24px rgba(79,70,229,0.22);
   text-decoration: none;
-  box-shadow: 0 8px 32px rgba(79, 70, 229, 0.28);
-  transition: box-shadow 0.25s, transform 0.2s;
 
-  // Dezente Hintergrundstruktur
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at 80% 50%, rgba(255,255,255,0.06) 0%, transparent 60%);
-    pointer-events: none;
-  }
-
-  &:hover {
-    box-shadow: 0 12px 40px rgba(79, 70, 229, 0.38);
-    transform: translateY(-2px);
-  }
-
-  // Großes dekoratives Anführungszeichen links
   &__deco {
     font-family: Georgia, serif;
-    font-size: 5rem;
-    line-height: 1;
-    color: rgba(255, 255, 255, 0.15);
+    font-size: 3rem;
+    line-height: 0.8;
+    color: rgba(255,255,255,0.25);
     flex-shrink: 0;
-    margin-top: -8px;
-    user-select: none;
 
-    &--muted { color: rgba(99, 102, 241, 0.25); }
+    &--muted { color: rgba(255,255,255,0.15); }
   }
 
-  &__content {
-    flex: 1;
-    min-width: 0;
-  }
+  &__content { flex: 1; }
 
   &__text {
-    margin: 0 0 8px;
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: #ffffff;
-    line-height: 1.6;
+    margin: 0 0 4px;
     font-style: italic;
+    color: #e0e7ff;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.55;
   }
 
   &__credit {
     font-size: 0.78rem;
+    color: rgba(255,255,255,0.5);
     font-weight: 600;
-    color: rgba(196, 181, 253, 0.85);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
   }
 
-  // Bearbeiten-Icon rechts
   &__edit {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.1);
+    font-size: 1.1rem;
     text-decoration: none;
-    font-size: 1rem;
-    transition: background 0.2s;
-    cursor: pointer;
-
-    &:hover { background: rgba(255, 255, 255, 0.2); }
+    opacity: 0.7;
+    transition: opacity 0.15s;
+    &:hover { opacity: 1; }
   }
 
-  // Platzhalter-Variante (noch keine Botschaft)
   &--empty {
-    background: #fff;
-    border: 2px dashed #c7d2fe;
+    background: none;
+    border: 2px dashed rgba(99,102,241,0.3);
     box-shadow: none;
     cursor: pointer;
-    padding: 20px 24px;
-
-    &:hover {
-      border-color: #818cf8;
-      background: #f5f3ff;
-      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.1);
-      transform: translateY(-1px);
-    }
+    padding: 16px 20px;
   }
 
   &__placeholder {
     margin: 0;
-    flex: 1;
-    font-size: 0.9rem;
-    color: #6b7280;
+    color: #6366f1;
+    font-size: 0.88rem;
+    font-weight: 500;
     font-style: italic;
   }
 
   &__cta {
     font-size: 0.82rem;
+    color: #6366f1;
     font-weight: 700;
-    color: #4f46e5;
     white-space: nowrap;
-    flex-shrink: 0;
   }
 }
 
-
 // ── Motivations-Card (Profil) ─────────────────────────────────────────────────
-
 .card--motivation {
   border-color: #c7d2fe;
   background: linear-gradient(160deg, #fafafe 0%, #f0f0ff 100%);
@@ -327,7 +316,6 @@
   }
 }
 
-// Vorschau der eingetippten Botschaft
 .motivation-preview {
   display: flex;
   align-items: flex-start;
@@ -344,10 +332,7 @@
     color: rgba(255,255,255,0.3);
     flex-shrink: 0;
 
-    &--close {
-      align-self: flex-end;
-      margin-bottom: -8px;
-    }
+    &--close { align-self: flex-end; margin-bottom: -8px; }
   }
 
   &__text {
@@ -396,3 +381,113 @@
   border-color: rgba(79,70,229,0.2);
   border-top-color: #4f46e5;
 }
+
+// ── Body Scan Dashboard-Widget ────────────────────────────────────────────────
+.bs-widget {
+  background: #ffffff;
+  border: 1px solid #a7f3d0;
+  border-radius: 16px;
+  padding: 20px 22px;
+  box-shadow: 0 4px 16px rgba(16,185,129,0.08);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #065f46;
+  }
+
+  &__link {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #059669;
+    text-decoration: none;
+    transition: color 0.15s;
+    &:hover { color: #047857; text-decoration: underline; }
+  }
+
+  &__hint {
+    margin: 12px 0 0;
+    font-size: 0.76rem;
+    color: #94a3b8;
+    text-align: center;
+
+    a {
+      color: #059669;
+      text-decoration: none;
+      font-weight: 600;
+      &:hover { text-decoration: underline; }
+    }
+  }
+}
+
+// Kompaktes 3×2 Raster für die Vorschau-Karten
+.bs-widget__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+
+  @media (max-width: 680px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 420px) { grid-template-columns: 1fr; }
+}
+
+.bs-preview-card {
+  background: #f0fdf4;
+  border: 1px solid #d1fae5;
+  border-radius: 12px;
+  padding: 12px 14px;
+
+  &__label {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+
+  &__unit {
+    margin-left: 3px;
+    font-size: 0.68rem;
+    color: #6b7280;
+    font-weight: 500;
+    text-transform: none;
+  }
+
+  &__value {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+}
+
+// Trend-Badge im Widget
+.bs-trend-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+
+  &.trend--good    { color: #047857; background: #d1fae5; }
+  &.trend--bad     { color: #b91c1c; background: #fee2e2; }
+  &.trend--neutral { color: #94a3b8; background: #f1f5f9; }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

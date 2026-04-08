@@ -106,7 +106,47 @@
     </ng-container>
   </div>
 
-  <!-- ── Persönliche Motivations-Botschaft ─────────────────────────────── -->
+  <!-- ── Body-Scan-Vorschau-Widget ────────────────────────────────────────── -->
+  <div class="bs-widget" *ngIf="showBodyScanWidget">
+    <div class="bs-widget__header">
+      <div class="bs-widget__title">
+        <span>🔬</span>
+        <span>Letzte Body-Scan-Werte</span>
+      </div>
+      <a routerLink="/profile" class="bs-widget__link">Vollständige Ansicht →</a>
+    </div>
+
+    <!-- Spinner -->
+    <div *ngIf="isLoadingBodyScan" class="loading-row loading-row--sm">
+      <span class="spinner spinner--sm"></span><span>Lade Messwerte…</span>
+    </div>
+
+    <!-- Kompakte Vorschau-Tabelle -->
+    <ng-container *ngIf="!isLoadingBodyScan && bodyScanPreviewRows.length > 0">
+      <div class="bs-widget__grid">
+        <div *ngFor="let row of bodyScanPreviewRows" class="bs-preview-card">
+          <div class="bs-preview-card__label">
+            {{ row.label }}
+            <span class="bs-preview-card__unit" *ngIf="row.unit">{{ row.unit }}</span>
+          </div>
+          <div class="bs-preview-card__value">
+            {{ row.latest | number:'1.1-2' }}
+            <span class="bs-trend-badge"
+                  *ngIf="row.delta !== null && row.delta !== 0"
+                  [ngClass]="getTrendClass(row)">
+              {{ getTrendArrow(row.delta) }}{{ row.delta | number:'1.1-1' }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <p class="bs-widget__hint">
+        ▲▼ zeigt Veränderung zur vorherigen Messung ·
+        <a routerLink="/profile">Neue Messung eintragen</a>
+      </p>
+    </ng-container>
+  </div>
+
+  <!-- ── Persönliche Motivations-Botschaft ─────────────────────────────── -->\
   <div class="motivation-banner" *ngIf="motivationalMessage">
     <div class="motivation-banner__deco">❝</div>
     <div class="motivation-banner__content">

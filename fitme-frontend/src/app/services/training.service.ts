@@ -7,7 +7,8 @@ import {
   TrainingPlanSummary, TrainingPlanDetail,
   SessionFeedbackRequest, SessionFeedbackResponse,
   SessionHistoryEntry, UpdateProfileRequest, UserProfile,
-  FeedbackAvailability, PlanLimitInfo
+  FeedbackAvailability, PlanLimitInfo,
+  BodyScanEntry, BodyScanRequest
 } from '../models/training.model';
 
 export interface GeneratePlanResponse {
@@ -37,7 +38,6 @@ export class TrainingService {
     return this.http.get<TrainingPlanDetail>(`${this.baseUrl}/training-plans/${planId}`);
   }
 
-  /** Prüft ob Feedback für diese Woche möglich ist */
   getFeedbackAvailability(planId: number): Observable<FeedbackAvailability> {
     return this.http.get<FeedbackAvailability>(
       `${this.baseUrl}/training-plans/${planId}/feedback-availability`
@@ -51,7 +51,6 @@ export class TrainingService {
     );
   }
 
-  /** Alias — wird von training-plan.ts verwendet */
   setPlanStatus(planId: number, active: boolean): Observable<SetStatusResponse> {
     return this.setActiveStatus(planId, active);
   }
@@ -94,6 +93,20 @@ export class TrainingService {
     return this.http.get<PlanLimitInfo>(`${this.baseUrl}/users/me/plan-limit`);
   }
 
+  // ── Body Scan ──────────────────────────────────────────────────
 
+  /** Gesamte Body-Scan-Historie des eingeloggten Nutzers (neueste zuerst). */
+  getBodyScanHistory(): Observable<BodyScanEntry[]> {
+    return this.http.get<BodyScanEntry[]>(`${this.baseUrl}/body-scan`);
+  }
 
+  /** Neuen Body-Scan-Eintrag speichern (Upsert: gleiches Datum überschreibt). */
+  saveBodyScan(req: BodyScanRequest): Observable<BodyScanEntry> {
+    return this.http.post<BodyScanEntry>(`${this.baseUrl}/body-scan`, req);
+  }
+
+  /** Body-Scan-Eintrag löschen. */
+  deleteBodyScan(id: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.baseUrl}/body-scan/${id}`);
+  }
 }
