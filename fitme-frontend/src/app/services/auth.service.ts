@@ -11,12 +11,10 @@ import { AuthService as Auth0Service } from '@auth0/auth0-angular';
 import { User as Auth0User } from '@auth0/auth0-spa-js';
 
 /**
- * Dual-Mode AuthService:
+ * Dual-Modus
  *
- * mode='local'  → Eigene JWT-Auth (Login/Register über Backend-API)
+ * mode='local' ---> Eigene JWT-Auth Login/Register über Backend-API
  * mode='auth0'  → Auth0 Universal Login (SDK managed)
- *
- * Alle Komponenten nutzen diesen Service — der Modus ist transparent.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -58,9 +56,7 @@ export class AuthService {
     }
   }
 
-  // ══════════════════════════════════════════════════════════════
   // PUBLIC API — identisch für beide Modi
-  // ══════════════════════════════════════════════════════════════
 
   login(request?: LoginRequest): Observable<AuthResponse> {
     if (this.isAuth0 && this.auth0) {
@@ -142,10 +138,9 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-  // ══════════════════════════════════════════════════════════════
-  // PRIVATE — Local JWT Mode
-  // ══════════════════════════════════════════════════════════════
+  //privater Modus
 
+  //localStorage speichert meinen Token den ich von meinem Backend erhalte
   private storeSession(res: AuthResponse): void {
     localStorage.setItem(this.ACCESS_TOKEN_KEY, res.accessToken);
     localStorage.setItem(this.REFRESH_TOKEN_KEY, res.refreshToken);

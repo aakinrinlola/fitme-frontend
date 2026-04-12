@@ -136,7 +136,7 @@ export class PdfExportService {
 
       const hasDesc = group.exercises.some(e => e.description?.trim());
 
-      // ── Fixe Spaltenbreiten (pageW=210, margin=16 → Tabelle=178mm) ─────────
+      // ── Fixe Spaltenbreiten
       // Einheitlich für alle Tage: immer gleiche Breiten, kein Umbrechen in Headers
       // nr(8) + name(76) + sets(20) + reps(16) + weight(24) + rest(20) + rpe(14) = 178mm
       const COL_NR     =  8;
@@ -238,7 +238,7 @@ export class PdfExportService {
    * Entfernt "KI-generiert:", Tages-Rotations-Hinweise und Doppelungen.
    */
   private cleanDescription(raw: string): string {
-    // "🤖 KI-generiert: " Prefix entfernen
+    //  KI-generiert: " Prefix entfernen
     let s = raw.replace(/^🤖\s*KI-generiert:\s*/i, '');
     // Alles ab " | Tage:" abschneiden (wird zu lang)
     const cutAt = s.indexOf(' | Tage:');

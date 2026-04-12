@@ -40,11 +40,12 @@ export class TrainingPlan implements OnInit {
 
   planId!: number;
 
-  // ── Aufklappbare Mobilitäts-Beschreibungen ────────────────────────────────
+  //Aufklappbare Mobilitäts-Beschreibungen
   private expandedDescriptions = new Set<number | string>();
 
   toggleDescription(id: number): void {
     if (this.expandedDescriptions.has(id)) {
+
       this.expandedDescriptions.delete(id);
     } else {
       this.expandedDescriptions.add(id);

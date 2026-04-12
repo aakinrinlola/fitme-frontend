@@ -93,14 +93,14 @@ export class TrainingService {
     return this.http.get<PlanLimitInfo>(`${this.baseUrl}/users/me/plan-limit`);
   }
 
-  // ── Body Scan ──────────────────────────────────────────────────
+  // BodyScan
 
   /** Gesamte Body-Scan-Historie des eingeloggten Nutzers (neueste zuerst). */
   getBodyScanHistory(): Observable<BodyScanEntry[]> {
     return this.http.get<BodyScanEntry[]>(`${this.baseUrl}/body-scan`);
   }
 
-  /** Neuen Body-Scan-Eintrag speichern (Upsert: gleiches Datum überschreibt). */
+  /** Neuen Body-Scan-Eintrag speichern */
   saveBodyScan(req: BodyScanRequest): Observable<BodyScanEntry> {
     return this.http.post<BodyScanEntry>(`${this.baseUrl}/body-scan`, req);
   }

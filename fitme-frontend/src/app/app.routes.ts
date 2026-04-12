@@ -12,17 +12,12 @@ import { authGuard, guestGuard } from './guards/auth.guard';
 import { TrainingPlanCreate } from './components/training-plan-create/training-plan-create';
 import { environment } from '../environments/environment';
 
-/**
- * Root-Redirect:
- * Local-Mode  → /login  (User muss sich einloggen)
- * Auth0-Mode  → /dashboard  (Auth0 Guard löst Login automatisch aus)
- */
 const defaultRedirect = environment.auth?.mode === 'auth0' ? 'dashboard' : 'login';
 
 export const routes: Routes = [
   { path: '', redirectTo: defaultRedirect, pathMatch: 'full' },
 
-  // Login/Register — nur im Local-Mode relevant
+  // Login/Register —  im Local-Mode relevant
   { path: 'login', component: Login, canActivate: [guestGuard] },
   { path: 'register', component: Register, canActivate: [guestGuard] },
 

@@ -20,6 +20,7 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   return next(authReq).pipe(
     catchError((err: HttpErrorResponse) => {
       if (err.status === 401 && !req.url.includes('/api/auth/')) {
+        //mache ich nur falls ich einen refresh token nach einer Stunde zum Beispiel und der lebt auch länger
         const refreshToken = auth.getRefreshToken();
         if (refreshToken) {
           return auth.refresh({ refreshToken }).pipe(

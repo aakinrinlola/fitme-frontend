@@ -21,7 +21,7 @@
         <a class="sidebar__logout" (click)="logout()">Ausloggen</a>
       </ng-container>
 
-      <!-- Guest links — NUR im Local-Modus (Auth0 hat kein /login) -->
+      <!-- Guest links — NUR im Local-Modus  -->
       <ng-container *ngIf="!isLoggedIn && !isAuth0Mode">
         <div class="sidebar__divider"></div>
         <a routerLink="/login"    routerLinkActive="active">Login</a>

@@ -12,21 +12,33 @@
       <span>⚠ {{ errorMessage }}</span>
     </div>
 
-    <form (ngSubmit)="onSubmit()" #regForm="ngForm" class="auth-form">
+    <!-- Hinweis-Banner wenn Form ungültig aber abzuschicken versucht -->
+    <div *ngIf="regForm.invalid && formSubmitAttempted" class="alert alert--warning">
+      ⚠ Bitte korrigiere die markierten Felder, bevor du fortfährst.
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #regForm="ngForm" class="auth-form" novalidate>
+
       <!-- Username -->
       <div class="form-group">
         <label class="form-label" for="username">Username *</label>
         <input
           id="username"
           class="form-input"
+          [class.form-input--error]="usernameField.invalid && (usernameField.dirty || formSubmitAttempted)"
           type="text"
           [(ngModel)]="username"
           name="username"
+          #usernameField="ngModel"
           required
           minlength="3"
           maxlength="50"
-          placeholder="Dein Username"
+          placeholder="Mindestens 3 Zeichen"
         />
+        <span class="form-error" *ngIf="usernameField.invalid && (usernameField.dirty || formSubmitAttempted)">
+          <ng-container *ngIf="usernameField.errors?.['required']">Username ist erforderlich.</ng-container>
+          <ng-container *ngIf="usernameField.errors?.['minlength']">Mindestens 3 Zeichen erforderlich.</ng-container>
+        </span>
       </div>
 
       <!-- E-Mail -->
@@ -35,28 +47,40 @@
         <input
           id="email"
           class="form-input"
+          [class.form-input--error]="emailField.invalid && (emailField.dirty || formSubmitAttempted)"
           type="email"
           [(ngModel)]="email"
           name="email"
+          #emailField="ngModel"
           required
           placeholder="deine@email.de"
         />
+        <span class="form-error" *ngIf="emailField.invalid && (emailField.dirty || formSubmitAttempted)">
+          <ng-container *ngIf="emailField.errors?.['required']">E-Mail ist erforderlich.</ng-container>
+          <ng-container *ngIf="emailField.errors?.['email']">Bitte eine gültige E-Mail-Adresse eingeben.</ng-container>
+        </span>
       </div>
 
       <!-- Passwort -->
       <div class="form-group">
-        <label class="form-label" for="password">Passwort * (min. 8 Zeichen)</label>
+        <label class="form-label" for="password">Passwort * <span class="form-label__hint">(min. 8 Zeichen)</span></label>
         <input
           id="password"
           class="form-input"
+          [class.form-input--error]="passwordField.invalid && (passwordField.dirty || formSubmitAttempted)"
           type="password"
           [(ngModel)]="password"
           name="password"
+          #passwordField="ngModel"
           required
           minlength="8"
           placeholder="Mindestens 8 Zeichen"
           autocomplete="new-password"
         />
+        <span class="form-error" *ngIf="passwordField.invalid && (passwordField.dirty || formSubmitAttempted)">
+          <ng-container *ngIf="passwordField.errors?.['required']">Passwort ist erforderlich.</ng-container>
+          <ng-container *ngIf="passwordField.errors?.['minlength']">Mindestens 8 Zeichen erforderlich.</ng-container>
+        </span>
       </div>
 
       <!-- Fitness Level -->
@@ -72,60 +96,87 @@
         </select>
       </div>
 
-      <!-- Optional: Age + Weight -->
+      <!-- Alter + Gewicht -->
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label" for="age">Alter (optional)</label>
+          <label class="form-label" for="age">
+            Alter <span class="form-label__hint">(optional, 10–120)</span>
+          </label>
           <input
             id="age"
             class="form-input"
+            [class.form-input--error]="ageField.invalid && (ageField.dirty || formSubmitAttempted)"
             type="number"
             [(ngModel)]="age"
             name="age"
+            #ageField="ngModel"
             min="10"
             max="120"
             placeholder="z.B. 25"
           />
+          <span class="form-error" *ngIf="ageField.invalid && (ageField.dirty || formSubmitAttempted)">
+            Bitte einen Wert zwischen 10 und 120 eingeben.
+          </span>
         </div>
+
         <div class="form-group">
-          <label class="form-label" for="weightKg">Gewicht kg (optional)</label>
+          <label class="form-label" for="weightKg">
+            Gewicht <span class="form-label__hint">(optional, 30–300 kg)</span>
+          </label>
           <input
             id="weightKg"
             class="form-input"
+            [class.form-input--error]="weightField.invalid && (weightField.dirty || formSubmitAttempted)"
             type="number"
             [(ngModel)]="weightKg"
             name="weightKg"
+            #weightField="ngModel"
             min="30"
             max="300"
             step="0.5"
             placeholder="z.B. 80"
           />
+          <span class="form-error" *ngIf="weightField.invalid && (weightField.dirty || formSubmitAttempted)">
+            Bitte einen Wert zwischen 30 und 300 kg eingeben.
+          </span>
         </div>
       </div>
 
-      <!-- Height -->
+      <!-- Größe -->
       <div class="form-group">
-        <label class="form-label" for="heightCm">Größe cm (optional)</label>
+        <label class="form-label" for="heightCm">
+          Größe <span class="form-label__hint">(optional, 100–250 cm)</span>
+        </label>
         <input
           id="heightCm"
           class="form-input"
+          [class.form-input--error]="heightField.invalid && (heightField.dirty || formSubmitAttempted)"
           type="number"
           [(ngModel)]="heightCm"
           name="heightCm"
+          #heightField="ngModel"
           min="100"
           max="250"
           placeholder="z.B. 180"
         />
+        <span class="form-error" *ngIf="heightField.invalid && (heightField.dirty || formSubmitAttempted)">
+          Bitte einen Wert zwischen 100 und 250 cm eingeben. (Tipp: Größe ≠ Gewicht!)
+        </span>
       </div>
 
       <button
         type="submit"
         class="btn btn--primary"
-        [disabled]="isLoading || !regForm.valid"
+        [disabled]="isLoading"
       >
         <span *ngIf="!isLoading">Konto erstellen</span>
         <span *ngIf="isLoading" class="spinner"></span>
       </button>
+
+      <!-- Zeigt Hinweis wenn Felder ungültig sind -->
+      <p class="form-invalid-hint" *ngIf="regForm.invalid && formSubmitAttempted">
+        ☝ Bitte alle rot markierten Felder korrigieren.
+      </p>
     </form>
 
     <p class="auth-card__footer">

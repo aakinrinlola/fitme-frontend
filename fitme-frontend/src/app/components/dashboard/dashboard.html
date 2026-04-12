@@ -106,7 +106,7 @@
     </ng-container>
   </div>
 
-  <!-- ── Body-Scan-Vorschau-Widget ────────────────────────────────────────── -->
+  <!-- Body-Scan-Vorschau-Widget -->
   <div class="bs-widget" *ngIf="showBodyScanWidget">
     <div class="bs-widget__header">
       <div class="bs-widget__title">
@@ -146,8 +146,9 @@
     </ng-container>
   </div>
 
-  <!-- ── Persönliche Motivations-Botschaft ─────────────────────────────── -->\
+  <!-- Persönliche Motivations-Botschaft -->
   <div class="motivation-banner" *ngIf="motivationalMessage">
+
     <div class="motivation-banner__deco">❝</div>
     <div class="motivation-banner__content">
       <p class="motivation-banner__text">{{ motivationalMessage }}</p>
@@ -156,7 +157,7 @@
     <a routerLink="/profile" class="motivation-banner__edit" title="Botschaft bearbeiten">✏️</a>
   </div>
 
-  <!-- Platzhalter wenn noch keine Botschaft gesetzt -->
+  <!-- Platzhalter wenn noch keine Botschaft  -->
   <a routerLink="/profile" class="motivation-banner motivation-banner--empty"
      *ngIf="!motivationalMessage && !isLoadingMotivation">
     <span class="motivation-banner__deco motivation-banner__deco--muted">❝</span>

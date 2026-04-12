@@ -23,7 +23,7 @@ export class Profile implements OnInit {
 
   profile: UserProfile | null = null;
 
-  // ── Profil-Edit ────────────────────────────────────────────────────────────
+  //Profileditieren
   editUsername     = '';
   editEmail        = '';
   editAge:      number | null = null;
@@ -33,11 +33,11 @@ export class Profile implements OnInit {
   editMotivationalMessage = '';
   showBodyScanInDashboard = false;
 
-  // ── Password ───────────────────────────────────────────────────────────────
+  // Passwort einfach gehalten mal fürs erste
   oldPassword = '';
   newPassword = '';
 
-  // ── Loading / Status ───────────────────────────────────────────────────────
+  // loading Status
   isLoadingProfile   = true;
   isSavingProfile    = false;
   isChangingPassword = false;
@@ -57,7 +57,7 @@ export class Profile implements OnInit {
     { value: 'ADVANCED',     label: 'Experte' }
   ];
 
-  // ── Body Scan ──────────────────────────────────────────────────────────────
+  //BodyScan
   bodyScanHistory: BodyScanEntry[] = [];
   isLoadingBodyScan  = false;
   bodyScanError:   string | null = null;
@@ -65,16 +65,16 @@ export class Profile implements OnInit {
   isSavingBodyScan = false;
   isDeletingBodyScan = false;
 
-  /** Zeigt das Eingabe-Formular für einen neuen Eintrag */
+  //Zeigt das Eingabe-Formular für einen neuen Eintrag
   showBodyScanForm = false;
 
-  /** Formularmodell für neuen Eintrag */
+  //Formularmodell für neuen Eintrag
   newScan: BodyScanRequest = { measuredAt: this.todayIso() };
 
-  /** Metadaten aller Zeilen (Label, Einheit, Richtung) */
+  //Formularmodell für neuen Eintrag
   readonly scanRows: BodyScanRowMeta[] = BODY_SCAN_ROWS;
 
-  /** Die letzten 3 Messungen für die Vergleichstabelle */
+  //Die letzten 3 Messungen für die Vergleichstabelle
   get recentScans(): BodyScanEntry[] {
     return this.bodyScanHistory.slice(0, 3);
   }
@@ -94,7 +94,7 @@ export class Profile implements OnInit {
     this.loadProfile();
   }
 
-  // ── Profil laden ───────────────────────────────────────────────────────────
+  //Profil laden
   loadProfile(): void {
     this.isLoadingProfile = true;
     this.trainingService.getProfile().subscribe({
@@ -115,7 +115,7 @@ export class Profile implements OnInit {
     });
   }
 
-  // ── Profil speichern ───────────────────────────────────────────────────────
+  //Profil speichern
   saveProfile(): void {
     this.isSavingProfile = true;
     this.profileError    = null;
@@ -141,7 +141,7 @@ export class Profile implements OnInit {
     });
   }
 
-  // ── Motivationsnachricht speichern ─────────────────────────────────────────
+  //Motivationsnachricht speichern
   saveMotivationalMessage(): void {
     this.isSavingMotivation  = true;
     this.motivationError     = null;
@@ -162,7 +162,7 @@ export class Profile implements OnInit {
     });
   }
 
-  // ── Dashboard-Toggle speichern ─────────────────────────────────────────────
+  //Dashboard-Toggle speichern
   saveBodyScanToggle(): void {
     this.isSavingToggle = true;
     this.trainingService.updateProfile({
@@ -177,7 +177,7 @@ export class Profile implements OnInit {
     });
   }
 
-  // ── Passwort ändern ────────────────────────────────────────────────────────
+  //Passwort ändern
   changePassword(): void {
     if (!this.oldPassword || !this.newPassword) return;
     this.isChangingPassword = true;
@@ -198,7 +198,7 @@ export class Profile implements OnInit {
     });
   }
 
-  // ── Body Scan: Historie laden ──────────────────────────────────────────────
+  //Body Scan: Historie laden
   loadBodyScanHistory(): void {
     this.isLoadingBodyScan = true;
     this.trainingService.getBodyScanHistory().subscribe({
@@ -210,7 +210,7 @@ export class Profile implements OnInit {
     });
   }
 
-  // ── Body Scan: Neuen Eintrag speichern ─────────────────────────────────────
+  //Body Scan: Neuen Eintrag speichern
   saveBodyScan(): void {
     if (!this.newScan.measuredAt) return;
     this.isSavingBodyScan = true;
@@ -232,7 +232,7 @@ export class Profile implements OnInit {
     });
   }
 
-  // ── Body Scan: Eintrag löschen ─────────────────────────────────────────────
+  //Body Scan: Eintrag löschen
   deleteBodyScan(id: number): void {
     if (!confirm('Diesen Eintrag wirklich löschen?')) return;
     this.isDeletingBodyScan = true;
@@ -245,9 +245,9 @@ export class Profile implements OnInit {
     });
   }
 
-  // ── Hilfsmethoden ─────────────────────────────────────────────────────────
+  //Hilfsmethoden
 
-  /** Gibt den Wert einer Zeile für einen bestimmten Scan zurück. */
+  // Gibt den Wert einer Zeile für einen bestimmten Scan zurück.
   getScanValue(scan: BodyScanEntry, key: keyof BodyScanEntry): number | null {
     const val = scan[key];
     return typeof val === 'number' ? val : null;
@@ -266,25 +266,20 @@ export class Profile implements OnInit {
     return +(current - previous).toFixed(2);
   }
 
-  /**
-   * CSS-Klasse für den Trendpfeil je nach Richtung und Delta.
-   * 'trend--good'    = grün
-   * 'trend--bad'     = rot
-   * 'trend--neutral' = grau
-   */
+  //Klassen unterscheiden
   getTrendClass(delta: number | null, direction: 'less' | 'more' | 'neutral'): string {
     if (delta == null || delta === 0 || direction === 'neutral') return 'trend--neutral';
     const improved = direction === 'more' ? delta > 0 : delta < 0;
     return improved ? 'trend--good' : 'trend--bad';
   }
 
-  /** Pfeil-Symbol (▲ / ▼) für Delta. */
+  //
   getTrendArrow(delta: number | null): string {
     if (delta == null || delta === 0) return '';
     return delta > 0 ? '▲' : '▼';
   }
 
-  /** Formatiertes Datum für Spaltenüberschrift. */
+  //Formatiertes Datum für Spaltenüberschrift
   formatScanDate(iso: string): string {
     return new Date(iso).toLocaleDateString('de-DE', {
       day: '2-digit', month: '2-digit', year: '2-digit'
@@ -299,7 +294,7 @@ export class Profile implements OnInit {
     return new Date().toISOString().split('T')[0];
   }
 
-  /** Prüft ob mindestens ein Feld im newScan (außer Datum) befüllt ist. */
+  /** Prüft ob mindestens ein Feld im newScan AUSER DATUM befüllt ist. */
   get newScanHasValues(): boolean {
     const { measuredAt, ...rest } = this.newScan;
     return Object.values(rest).some(v => v != null);

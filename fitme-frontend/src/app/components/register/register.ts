@@ -23,15 +23,22 @@ export class Register {
   isLoading = false;
   errorMessage: string | null = null;
 
+  /** Wird true wenn der User einmal auf "Konto erstellen" geklickt hat → Fehler anzeigen */
+  formSubmitAttempted = false;
+
   readonly fitnessLevels = [
-    { value: 'BEGINNER', label: 'Anfänger' },
+    { value: 'BEGINNER',     label: 'Anfänger'       },
     { value: 'INTERMEDIATE', label: 'Fortgeschritten' },
-    { value: 'ADVANCED', label: 'Experte' }
+    { value: 'ADVANCED',     label: 'Experte'         }
   ];
 
   constructor(private authService: AuthService, private router: Router) {}
 
   onSubmit(): void {
+    this.formSubmitAttempted = true;   // ← ab jetzt Fehler anzeigen
+
+    // Wenn das Form ungültig ist, hier abbrechen
+    // (Button ist nicht mehr disabled, aber wir validieren hier)
     this.isLoading = true;
     this.errorMessage = null;
 
