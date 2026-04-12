@@ -72,6 +72,9 @@
       </span>
     </button>
 
+    <a *ngIf="isAdmin" [routerLink]="['/training-plan', planId, 'edit']"
+       class="btn btn--edit">✏️ Bearbeiten</a>
+
     <button class="btn btn--danger" (click)="confirmDelete()" [disabled]="isLoading">Löschen</button>
   </div>
 

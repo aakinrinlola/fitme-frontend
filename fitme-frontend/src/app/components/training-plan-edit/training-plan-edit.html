@@ -1,0 +1,295 @@
+<div class="edit-page" *ngIf="!isLoading">
+
+  <div class="edit-page__back">
+    <a [routerLink]="['/training-plan', planId]" class="back-link">← Zurück zum Plan</a>
+  </div>
+
+  <div class="edit-header">
+    <h1 class="edit-header__title">Plan bearbeiten</h1>
+    <p class="edit-header__sub" *ngIf="plan">
+      „{{ plan.planName }}" — Änderungen speichern oder als neuen Plan übernehmen.
+    </p>
+  </div>
+
+  <div *ngIf="errorMessage"   class="alert alert--error">⚠ {{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="alert alert--success">✓ {{ successMessage }}</div>
+
+  <form (ngSubmit)="saveChanges()" #editForm="ngForm" class="edit-form">
+
+    <!-- Plan-Details -->
+    <div class="card">
+      <h2 class="card__title">Plandetails</h2>
+      <div class="form-group">
+        <label class="form-label" for="planName">Planname *</label>
+        <input id="planName" class="form-input" type="text"
+               [(ngModel)]="planName" name="planName"
+               required placeholder="z.B. Push/Pull/Legs"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="description">Beschreibung <span class="optional-tag">(optional)</span></label>
+        <textarea id="description" class="form-textarea"
+                  [(ngModel)]="description" name="description"
+                  rows="2" placeholder="Kurze Beschreibung …"></textarea>
+      </div>
+    </div>
+
+    <!-- Trainingstage -->
+    <div class="card" *ngFor="let day of trainingDays; let di = index">
+      <div class="card__header">
+        <div class="day-header">
+          <span class="day-badge">{{ day.dayName }}</span>
+          <h2 class="card__title">Übungen</h2>
+        </div>
+        <div class="day-header-actions">
+          <button type="button" class="btn btn--template btn--sm" (click)="openLoadDayModal(di)">📋 Vorlage</button>
+          <button type="button" class="btn btn--save-day btn--sm" (click)="openSaveDayModal(di)">💾 Vorlage</button>
+          <button type="button" class="btn btn--secondary btn--sm" (click)="addExercise(di)">+ Übung</button>
+          <button type="button" class="btn btn--danger btn--sm"
+                  *ngIf="trainingDays.length > 1" (click)="removeDay(di)">× Tag</button>
+        </div>
+      </div>
+
+      <div class="exercise-list">
+        <div *ngFor="let ex of day.exercises; let i = index" class="exercise-row">
+          <div class="exercise-row__num">{{ i + 1 }}</div>
+          <div class="exercise-row__fields">
+            <div class="form-group form-group--wide ex-name-wrap">
+              <label class="form-label">Übungsname *</label>
+              <input class="form-input" type="text" [(ngModel)]="ex.exerciseName"
+                     [name]="'name_' + di + '_' + i" required placeholder="z.B. Kniebeuge"
+                     autocomplete="off"
+                     (input)="onNameInput('d' + di + '_' + i, $any($event.target).value)"
+                     (blur)="hideSuggestionsDelayed()"/>
+              <ul class="suggestions" *ngIf="suggestionsFor('d' + di + '_' + i).length">
+                <li *ngFor="let s of suggestionsFor('d' + di + '_' + i)"
+                    class="suggestions__item" (mousedown)="selectSuggestion(di, i, s)">
+                  <span class="suggestions__name">{{ s.exerciseName }}</span>
+                  <span class="suggestions__tag" *ngIf="s.muscleGroup">{{ s.muscleGroup }}<ng-container *ngIf="s.muscleFocus"> · {{ s.muscleFocus }}</ng-container></span>
+                </li>
+              </ul>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Sätze</label>
+              <input class="form-input" type="number" [(ngModel)]="ex.sets"
+                     [name]="'sets_' + di + '_' + i" min="1" max="20"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Wdh</label>
+              <input class="form-input" type="number" [(ngModel)]="ex.reps"
+                     [name]="'reps_' + di + '_' + i" min="1" max="100"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Gewicht (kg)</label>
+              <input class="form-input" type="number" [(ngModel)]="ex.weightKg"
+                     [name]="'weight_' + di + '_' + i" min="0" step="0.5"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pause (s)</label>
+              <input class="form-input" type="number" [(ngModel)]="ex.restSeconds"
+                     [name]="'rest_' + di + '_' + i" min="0" max="600"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ziel-RPE</label>
+              <input class="form-input" type="number" [(ngModel)]="ex.targetRpe"
+                     [name]="'rpe_' + di + '_' + i" min="1" max="10"/>
+            </div>
+          </div>
+          <div class="exercise-row__actions">
+            <button type="button" class="ex-save-btn" title="In Bibliothek speichern"
+                    [disabled]="!ex.exerciseName.trim()"
+                    (click)="openSaveExModal(di, i)">💾</button>
+            <button type="button" class="exercise-row__remove"
+                    (click)="removeExercise(di, i)" [disabled]="day.exercises.length === 1"
+                    title="Übung entfernen">×</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trainingstag hinzufügen -->
+    <button type="button" class="add-day-btn"
+            *ngIf="trainingDays.length < 3"
+            (click)="addDay()">
+      + Trainingstag hinzufügen
+      <span class="add-day-btn__hint">({{ trainingDays.length }}/3 Tage)</span>
+    </button>
+
+    <!-- Mobilitätsplan Toggle -->
+    <div class="mobility-card"
+         [class.mobility-card--active]="includeManualMobilityPlan"
+         (click)="toggleManualMobilityPlan()">
+      <div class="mobility-card__icon">🧘</div>
+      <div class="mobility-card__content">
+        <div class="mobility-card__title">Mobilitätsplan</div>
+        <div class="mobility-card__sub">
+          Separater Mobilitätsblock mit Dehn- &amp; Beweglichkeitsübungen inkl. Ausführungsbeschreibung.
+        </div>
+      </div>
+      <div class="mobility-card__toggle">
+        <span class="toggle-indicator" [class.toggle-indicator--on]="includeManualMobilityPlan">
+          {{ includeManualMobilityPlan ? 'AN' : 'AUS' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Mobilitätsblock-Übungen -->
+    <div class="card" *ngIf="includeManualMobilityPlan">
+      <div class="card__header">
+        <div class="day-header">
+          <span class="day-badge day-badge--mobility">🧘 Mobilitätsblock</span>
+          <h2 class="card__title">Übungen</h2>
+        </div>
+        <button type="button" class="btn btn--secondary btn--sm" (click)="addMobilityExercise()">
+          + Übung
+        </button>
+      </div>
+
+      <div class="exercise-list">
+        <div *ngFor="let ex of mobilityExercises; let i = index" class="exercise-row exercise-row--mobility">
+          <div class="exercise-row__num exercise-row__num--mobility">{{ i + 1 }}</div>
+          <div class="exercise-row__fields">
+            <div class="form-group form-group--wide">
+              <label class="form-label">Übungsname *</label>
+              <input class="form-input" type="text" [(ngModel)]="ex.exerciseName"
+                     [name]="'mob_name_' + i" required placeholder="z.B. Hip Flexor Stretch"/>
+            </div>
+            <div class="form-group form-group--wide">
+              <label class="form-label">Ausführung <span class="optional-tag">(optional)</span></label>
+              <textarea class="form-textarea" rows="2" [(ngModel)]="ex.description"
+                        [name]="'mob_desc_' + i"
+                        placeholder="z.B. 30 Sek. halten, beide Seiten …"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Sätze</label>
+              <input class="form-input" type="number" [(ngModel)]="ex.sets"
+                     [name]="'mob_sets_' + i" min="1" max="10"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Wdh / Sek.</label>
+              <input class="form-input" type="number" [(ngModel)]="ex.reps"
+                     [name]="'mob_reps_' + i" min="1" max="300"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pause (s)</label>
+              <input class="form-input" type="number" [(ngModel)]="ex.restSeconds"
+                     [name]="'mob_rest_' + i" min="0" max="300"/>
+            </div>
+          </div>
+          <button type="button" class="exercise-row__remove"
+                  (click)="removeMobilityExercise(i)" [disabled]="mobilityExercises.length === 1"
+                  title="Übung entfernen">×</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aktionen -->
+    <div class="edit-actions">
+      <a [routerLink]="['/training-plan', planId]" class="btn btn--secondary">Abbrechen</a>
+
+      <button type="button" class="btn btn--clone"
+              [disabled]="isSaving || !editForm.valid"
+              (click)="saveAsNew()">
+        <span *ngIf="!isSaving">📋 Als neuen Plan speichern</span>
+        <span *ngIf="isSaving" class="spinner-wrap"><span class="spinner"></span>Wird erstellt …</span>
+      </button>
+
+      <button type="submit" class="btn btn--primary"
+              [disabled]="isSaving || !editForm.valid">
+        <span *ngIf="!isSaving">💾 Änderungen speichern</span>
+        <span *ngIf="isSaving" class="spinner-wrap"><span class="spinner"></span>Wird gespeichert …</span>
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<!-- ══ Modal: Übung in Bibliothek speichern ══ -->
+<div class="modal-backdrop" *ngIf="saveExModal" (click)="saveExModal = null">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h3>💾 Übung in Bibliothek speichern</h3>
+    <p class="modal__sub">Wähle eine Muskelgruppe — und optional einen oder mehrere Foki für präzisere Vorschläge.</p>
+    <p class="modal__section-label">Muskelgruppe</p>
+    <div class="muscle-chip-grid">
+      <button *ngFor="let g of muscleGroupsForLibrary" type="button"
+              class="muscle-chip" [class.muscle-chip--active]="saveExModal.muscleGroup === g"
+              (click)="saveExModal.muscleGroup = g; saveExModal.muscleFocus = []">{{ g }}</button>
+    </div>
+    <ng-container *ngIf="focusOptionsForSaveModal.length > 0">
+      <p class="modal__section-label">Fokus <span class="optional-tag">(mehrere möglich)</span></p>
+      <div class="muscle-chip-grid">
+        <button *ngFor="let f of focusOptionsForSaveModal" type="button"
+                class="muscle-chip muscle-chip--focus"
+                [class.muscle-chip--active]="saveExModal.muscleFocus.includes(f)"
+                (click)="toggleSaveFocus(f)">{{ f }}</button>
+      </div>
+    </ng-container>
+    <div class="modal__actions">
+      <button class="btn btn--secondary" (click)="saveExModal = null">Abbrechen</button>
+      <button class="btn btn--primary" (click)="confirmSaveExercise()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Modal: Tag-Vorlage laden ══ -->
+<div class="modal-backdrop" *ngIf="loadDayModal" (click)="loadDayModal = null">
+  <div class="modal modal--wide" (click)="$event.stopPropagation()">
+    <h3>📋 Vorlage laden</h3>
+    <p class="modal__sub">Aktuellen Tag-Inhalt durch eine gespeicherte Vorlage ersetzen.</p>
+    <div class="muscle-chip-grid" style="margin-bottom:12px">
+      <button type="button" class="muscle-chip"
+              [class.muscle-chip--active]="loadDayModal.filterGroup === ''"
+              (click)="loadDayModal.filterGroup = ''">Alle</button>
+      <button *ngFor="let g of muscleGroupsForLibrary" type="button"
+              class="muscle-chip"
+              [class.muscle-chip--active]="loadDayModal.filterGroup === g"
+              (click)="loadDayModal.filterGroup = g">{{ g }}</button>
+    </div>
+    <div class="template-list" *ngIf="filteredDayTemplates.length > 0">
+      <div *ngFor="let t of filteredDayTemplates" class="template-item" (click)="applyDayTemplate(t)">
+        <div class="template-item__name">{{ t.templateName }}</div>
+        <div class="template-item__meta">
+          <span *ngIf="t.muscleGroup" class="template-item__tag">{{ t.muscleGroup }}</span>
+          <span class="template-item__count">{{ t.exercises.length }} Übungen</span>
+        </div>
+        <ul class="template-item__preview">
+          <li *ngFor="let e of t.exercises.slice(0,3)">{{ e.exerciseName }}</li>
+          <li *ngIf="t.exercises.length > 3" class="preview-more">+{{ t.exercises.length - 3 }} weitere</li>
+        </ul>
+        <button type="button" class="template-item__delete" title="Vorlage löschen"
+                (click)="$event.stopPropagation(); deleteDayTmpl(t.id)">🗑</button>
+      </div>
+    </div>
+    <p *ngIf="filteredDayTemplates.length === 0" class="modal__empty">Keine Vorlagen vorhanden.</p>
+    <div class="modal__actions">
+      <button class="btn btn--secondary" (click)="loadDayModal = null">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Modal: Tag als Vorlage speichern ══ -->
+<div class="modal-backdrop" *ngIf="saveDayModal" (click)="saveDayModal = null">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h3>💾 Tag als Vorlage speichern</h3>
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">Vorlagenname *</label>
+      <input class="form-input" type="text" [(ngModel)]="saveDayModal.name"
+             name="dayTemplateName" placeholder="z.B. Bein-Tag A"/>
+    </div>
+    <div class="muscle-chip-grid">
+      <button *ngFor="let g of muscleGroupsForLibrary" type="button"
+              class="muscle-chip" [class.muscle-chip--active]="saveDayModal.muscleGroup === g"
+              (click)="saveDayModal.muscleGroup = g">{{ g }}</button>
+    </div>
+    <div class="modal__actions">
+      <button class="btn btn--secondary" (click)="saveDayModal = null">Abbrechen</button>
+      <button class="btn btn--primary" (click)="confirmSaveDayTemplate()"
+              [disabled]="!saveDayModal.name.trim()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lade-Zustand -->
+<div class="loading-state" *ngIf="isLoading">
+  <div class="spinner spinner--dark"></div>
+  <p>Plan wird geladen …</p>
+</div>

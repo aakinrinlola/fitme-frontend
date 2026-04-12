@@ -8,7 +8,8 @@ import {
   SessionFeedbackRequest, SessionFeedbackResponse,
   SessionHistoryEntry, UpdateProfileRequest, UserProfile,
   FeedbackAvailability, PlanLimitInfo,
-  BodyScanEntry, BodyScanRequest
+  BodyScanEntry, BodyScanRequest,
+  ExerciseTemplate, DayTemplate
 } from '../models/training.model';
 
 export interface GeneratePlanResponse {
@@ -53,6 +54,10 @@ export class TrainingService {
 
   setPlanStatus(planId: number, active: boolean): Observable<SetStatusResponse> {
     return this.setActiveStatus(planId, active);
+  }
+
+  updatePlan(planId: number, req: CreateTrainingPlanRequest): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/training-plans/${planId}`, req);
   }
 
   deletePlan(planId: number): Observable<void> {
@@ -108,5 +113,33 @@ export class TrainingService {
   /** Body-Scan-Eintrag löschen. */
   deleteBodyScan(id: number): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.baseUrl}/body-scan/${id}`);
+  }
+
+  // ── Übungs-Vorlagen ────────────────────────────────────────────────────────
+  getExerciseTemplates(muscleGroup?: string): Observable<ExerciseTemplate[]> {
+    const params = muscleGroup ? `?muscleGroup=${encodeURIComponent(muscleGroup)}` : '';
+    return this.http.get<ExerciseTemplate[]>(`${this.baseUrl}/exercise-templates${params}`);
+  }
+
+  saveExerciseTemplate(req: Omit<ExerciseTemplate, 'id'>): Observable<ExerciseTemplate> {
+    return this.http.post<ExerciseTemplate>(`${this.baseUrl}/exercise-templates`, req);
+  }
+
+  deleteExerciseTemplate(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/exercise-templates/${id}`);
+  }
+
+  // ── Tag-Vorlagen ───────────────────────────────────────────────────────────
+  getDayTemplates(muscleGroup?: string): Observable<DayTemplate[]> {
+    const params = muscleGroup ? `?muscleGroup=${encodeURIComponent(muscleGroup)}` : '';
+    return this.http.get<DayTemplate[]>(`${this.baseUrl}/day-templates${params}`);
+  }
+
+  saveDayTemplate(req: Omit<DayTemplate, 'id'>): Observable<DayTemplate> {
+    return this.http.post<DayTemplate>(`${this.baseUrl}/day-templates`, req);
+  }
+
+  deleteDayTemplate(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/day-templates/${id}`);
   }
 }

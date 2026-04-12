@@ -25,6 +25,19 @@
   }
 }
 
+.template-start-section {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 18px;
+  padding: 24px; box-shadow: 0 2px 8px rgba(17,24,39,0.05);
+}
+
+.template-start__hint {
+  font-size: 0.9rem; color: #4b5563; margin: 0 0 16px;
+}
+
+.template-start__empty {
+  text-align: center; color: #9ca3af; font-size: 0.9rem; padding: 32px 0;
+}
+
 .create-form { display: flex; flex-direction: column; gap: 20px; }
 
 .card {
@@ -75,6 +88,7 @@
     background: #6366f1; border-color: #6366f1; color: #fff;
     box-shadow: 0 2px 8px rgba(99,102,241,0.25);
   }
+  &--focus { font-size: 0.8rem; padding: 5px 11px; }
 }
 
 // ── Fokus-Strategie Card ────────────────────────────────────────────────────
@@ -308,6 +322,41 @@
   &--success { background: #f0fdf4; color: #047857; border: 1px solid #bbf7d0; }
 }
 
+// ── Trainingstag-Header (manuell) ────────────────────────────────────────────
+.day-header {
+  display: flex; align-items: center; gap: 10px;
+  .card__title { margin-bottom: 0; }
+}
+
+.day-header-actions { display: flex; gap: 8px; }
+
+.day-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 4px 14px; border-radius: 99px;
+  background: #4f46e5; color: #fff;
+  font-size: 0.8rem; font-weight: 800; letter-spacing: 0.04em;
+  flex-shrink: 0;
+
+  &--mobility { background: #0ea5e9; }
+}
+
+.add-day-btn {
+  width: 100%; padding: 14px 20px;
+  border: 2px dashed #c7d2fe; border-radius: 14px;
+  background: #f8f9ff; color: #4f46e5;
+  font-weight: 700; font-size: 0.9rem; cursor: pointer;
+  transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+
+  &:hover { border-color: #4f46e5; background: #eef2ff; }
+
+  &__hint { font-weight: 400; color: #9ca3af; font-size: 0.8rem; }
+}
+
+.btn--danger {
+  background: #fee2e2; color: #b91c1c; border-color: #fecaca;
+  &:hover:not(:disabled) { background: #fecaca; border-color: #f87171; }
+}
+
 // ── Manuelle Übungs-Liste ─────────────────────────────────────────────────────
 .exercise-list  { display: flex; flex-direction: column; gap: 14px; }
 .exercise-row {
@@ -320,7 +369,94 @@
   &__remove { width: 36px; height: 36px; border: none; border-radius: 8px;
     background: #fee2e2; color: #b91c1c; font-size: 1.1rem; cursor: pointer; flex-shrink: 0;
     &:hover { background: #fecaca; } }
+
+  &--mobility { border-color: #bae6fd; background: #f0f9ff; }
+  &__num--mobility { background: #0ea5e9; }
+  &__actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
 }
+
+// ── Übung-Speichern Button ────────────────────────────────────────────────────
+.ex-save-btn {
+  width: 36px; height: 36px; border: 1px solid #d1d5db; border-radius: 8px;
+  background: #f9fafb; cursor: pointer; font-size: 1rem; flex-shrink: 0;
+  &:hover:not(:disabled) { background: #f0fdf4; border-color: #bbf7d0; }
+  &:disabled { opacity: 0.35; cursor: not-allowed; }
+}
+
+// ── Autocomplete-Dropdown ─────────────────────────────────────────────────────
+.ex-name-wrap { position: relative; }
+
+.suggestions {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
+  background: #fff; border: 1px solid #c7d2fe; border-radius: 10px;
+  margin: 2px 0 0; padding: 4px 0;
+  box-shadow: 0 8px 24px rgba(79,70,229,0.12);
+  list-style: none;
+
+  &__item {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 8px 12px; cursor: pointer;
+    &:hover { background: #eef2ff; }
+  }
+  &__name { font-weight: 600; font-size: 0.88rem; color: #111827; }
+  &__tag  { font-size: 0.72rem; font-weight: 700; padding: 2px 8px;
+    border-radius: 99px; background: #eef2ff; color: #4338ca; white-space: nowrap; }
+}
+
+// ── Vorlage-Buttons ───────────────────────────────────────────────────────────
+.btn--template  { background: #f0f9ff; color: #0369a1; border-color: #bae6fd;
+  &:hover { background: #e0f2fe; } }
+.btn--save-day  { background: #f0fdf4; color: #047857; border-color: #bbf7d0;
+  &:hover { background: #dcfce7; } }
+
+// ── Modals ────────────────────────────────────────────────────────────────────
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000;
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+
+.modal {
+  background: #fff; border-radius: 18px; padding: 28px 24px;
+  width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  max-height: 90vh; overflow-y: auto;
+
+  h3 { margin: 0 0 8px; font-size: 1.1rem; font-weight: 800; color: #111827; }
+
+  &--wide { max-width: 600px; }
+
+  &__sub           { font-size: 0.88rem; color: #6b7280; margin: 0 0 12px; }
+  &__section-label { font-size: 0.82rem; font-weight: 700; color: #374151; margin: 12px 0 6px; }
+  &__empty         { text-align: center; color: #9ca3af; padding: 24px 0; font-size: 0.9rem; }
+  &__actions       { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+}
+
+.muscle-chip-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+
+// ── Tag-Vorlagen Liste ─────────────────────────────────────────────────────────
+.template-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+
+.template-item {
+  position: relative; border: 1.5px solid #e5e7eb; border-radius: 12px;
+  padding: 14px 40px 14px 14px; cursor: pointer; transition: all 0.15s;
+  &:hover { border-color: #818cf8; background: #f8f9ff; }
+
+  &__name  { font-weight: 700; color: #111827; margin-bottom: 4px; }
+  &__meta  { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  &__tag   { font-size: 0.72rem; font-weight: 700; padding: 2px 8px;
+    border-radius: 99px; background: #eef2ff; color: #4338ca; }
+  &__count { font-size: 0.78rem; color: #6b7280; }
+  &__preview { margin: 0; padding: 0; list-style: none;
+    li { font-size: 0.8rem; color: #4b5563; padding: 1px 0; }
+  }
+  &__delete {
+    position: absolute; top: 10px; right: 10px;
+    width: 28px; height: 28px; border: none; border-radius: 6px;
+    background: transparent; cursor: pointer; font-size: 0.9rem;
+    &:hover { background: #fee2e2; }
+  }
+}
+
+.preview-more { color: #9ca3af !important; font-style: italic; }
 
 // ── Responsive ───────────────────────────────────────────────────────────────
 @media (max-width: 768px) {

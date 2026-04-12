@@ -26,6 +26,7 @@ export class TrainingPlan implements OnInit {
   isDeleting       = false;
   isTogglingStatus = false;
   isExportingPdf   = false;
+  isAdmin          = false;
 
   statusMessage:  string | null = null;
   errorMessage:   string | null = null;
@@ -74,6 +75,10 @@ export class TrainingPlan implements OnInit {
   ngOnInit(): void {
     this.planId = Number(this.route.snapshot.paramMap.get('id'));
     if (!this.planId) { this.router.navigate(['/dashboard']); return; }
+    this.trainingService.getProfile().subscribe({
+      next:  (p) => { this.isAdmin = p.role === 'ADMIN'; },
+      error: ()  => {}
+    });
     this.loadPlan();
   }
 

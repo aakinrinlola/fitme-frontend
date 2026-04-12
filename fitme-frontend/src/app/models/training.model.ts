@@ -5,6 +5,8 @@ export interface ExerciseInput {
   weightKg: number;
   restSeconds: number;
   targetRpe?: number;
+  trainingDay?: string;
+  description?: string;
 }
 
 export interface CreateTrainingPlanRequest {
@@ -158,6 +160,34 @@ export interface UserProfile {
   motivationalMessage?: string;
   showBodyScanInDashboard: boolean;
   hasBodyScanData: boolean;
+}
+
+export interface ExerciseTemplate {
+  id: number;
+  exerciseName: string;
+  muscleGroup: string;
+  muscleFocus: string;
+  defaultSets: number;
+  defaultReps: number;
+  defaultWeightKg: number;
+  defaultRestSeconds: number;
+  defaultTargetRpe: number;
+  description: string;
+}
+
+export interface DayTemplate {
+  id: number;
+  templateName: string;
+  muscleGroup: string;
+  exercises: {
+    exerciseName: string;
+    sets: number;
+    reps: number;
+    weightKg: number;
+    restSeconds: number;
+    targetRpe: number;
+    description: string;
+  }[];
 }
 
 export interface PlanLimitInfo {
