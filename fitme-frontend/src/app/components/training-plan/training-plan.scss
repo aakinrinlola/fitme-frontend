@@ -115,7 +115,47 @@
   padding: 8px 12px; background: #f3f4f6; border-radius: 8px;
 }
 
-// ── Tage-Grid ─────────────────────────────────────────────────────────────────
+// ── Trainingstag-Tabs ─────────────────────────────────────────────────────────
+.day-tabs-container { display: flex; flex-direction: column; gap: 0; }
+
+.day-tabs {
+  display: flex; align-items: stretch; gap: 4px;
+  background: #fff; border: 1px solid #e5e7eb; border-bottom: none;
+  border-radius: 18px 18px 0 0; padding: 10px 12px 0; flex-wrap: wrap;
+}
+
+.day-tab {
+  padding: 9px 20px; border: 1.5px solid #e5e7eb; border-bottom: none;
+  border-radius: 10px 10px 0 0; background: #f5f7fb; color: #6b7280;
+  font-weight: 700; font-size: 0.9rem; cursor: pointer;
+  display: flex; align-items: center; gap: 7px;
+  transition: all 0.15s; position: relative; bottom: -1px;
+
+  &:hover:not(.day-tab--active) { background: #eef2ff; color: #4f46e5; border-color: #c7d2fe; }
+
+  &--active {
+    background: #fff; color: #4f46e5; border-color: #4f46e5;
+    border-bottom-color: #fff; z-index: 1;
+  }
+  &--mobility:not(.day-tab--active) { color: #0369a1; border-color: #bae6fd; background: #f0f9ff; }
+  &--mobility.day-tab--active { color: #0369a1; border-color: #0ea5e9; border-bottom-color: #fff; }
+
+  &__count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 20px; height: 20px; padding: 0 5px; border-radius: 99px;
+    background: #e0e7ff; color: #4f46e5; font-size: 0.72rem; font-weight: 800;
+  }
+  &--active &__count { background: #4f46e5; color: #fff; }
+  &--mobility &__count { background: #e0f2fe; color: #0369a1; }
+  &--mobility.day-tab--active &__count { background: #0ea5e9; color: #fff; }
+}
+
+.day-tab-panel {
+  border-radius: 0 18px 18px 18px;
+  border-top-left-radius: 0;
+}
+
+// ── Tage-Grid (Legacy, nicht mehr aktiv genutzt) ──────────────────────────────
 .days-grid {
   display: grid; gap: 20px;
   grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
@@ -423,6 +463,8 @@
     &:hover { background: #dcfce7; } }
   &--pdf       { background: #f0fdf4; color: #047857; border-color: #bbf7d0;
     &:hover:not(:disabled) { background: #dcfce7; } }
+  &--excel     { background: #f0fdf4; color: #166534; border-color: #86efac;
+    &:hover:not(:disabled) { background: #dcfce7; border-color: #4ade80; } }
   &--danger    { background: #fef2f2; color: #b91c1c; border-color: #fecaca;
     &:hover:not(:disabled) { background: #fee2e2; } }
   &--edit      { background: #fffbeb; color: #92400e; border-color: #fde68a;

@@ -30,9 +30,13 @@ export class PdfExportService {
     const margin = 16;
     let y = margin;
 
-    // ── 1. Header-Banner ────────────────────────────────────────────────────
+    // ── Metadaten aus Beschreibung extrahieren ───────────────────────────────
+    const meta = this.parsePlanMeta(plan.description, dayGroups);
+
+    // ── 1. Header-Banner (erweitert für Ziel/Frequenz/Dauer) ────────────────
+    const bannerH = meta.goal || meta.sessionMinutes ? 54 : 46;
     doc.setFillColor(...this.C_ACCENT);
-    doc.rect(0, 0, pageW, 42, 'F');
+    doc.rect(0, 0, pageW, bannerH, 'F');
 
     doc.setFillColor(...this.C_WHITE);
     doc.roundedRect(margin, 8, 24, 9, 2, 2, 'F');
@@ -49,21 +53,37 @@ export class PdfExportService {
       : plan.planName;
     doc.text(titleText, margin, 28);
 
+    // Stats-Zeile: Ziel · x/Woche · min/Einheit
+    const statParts: string[] = [];
+    if (meta.goal)            statParts.push(`Ziel: ${meta.goal}`);
+    if (meta.daysPerWeek)     statParts.push(`${meta.daysPerWeek}x / Woche`);
+    if (meta.sessionMinutes)  statParts.push(`${meta.sessionMinutes} min / Einheit`);
+
+    if (statParts.length > 0) {
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(200, 210, 255);
+      doc.text(statParts.join('   ·   '), margin, 38);
+    }
+
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...this.C_WHITE);
     const dateStr = new Date().toLocaleDateString('de-AT', {
       day: '2-digit', month: 'long', year: 'numeric'
     });
-    doc.text(`Exportiert am ${dateStr}`, margin, 36);
+    doc.text(`Exportiert am ${dateStr}`, margin, bannerH - 6);
 
-    y = 50;
+    y = bannerH + 8;
 
-    // ── 2. Beschreibung — kurz, sauber, max 2 Zeilen ─────────────────────────
+    // ── 2. RPE-Skala ─────────────────────────────────────────────────────────
+    this.drawRpeScale(doc, pageW, margin, y);
+    y += 28;
+
+    // ── 3. Beschreibung — kurz, sauber, max 2 Zeilen ─────────────────────────
     if (plan.description) {
-      // Nur den relevanten Teil der Beschreibung extrahieren
       const cleaned = this.cleanDescription(plan.description);
       if (cleaned) {
-        // Maximal 2 Zeilen, Rest abschneiden
         const allLines: string[] = doc.splitTextToSize(cleaned, pageW - margin * 2);
         const lines = allLines.slice(0, 2);
         if (allLines.length > 2) lines[1] = lines[1].replace(/\s*\S+$/, '') + ' ...';
@@ -76,7 +96,7 @@ export class PdfExportService {
       }
     }
 
-    // ── 3. Info-Karten ───────────────────────────────────────────────────────
+    // ── 4. Info-Karten ───────────────────────────────────────────────────────
     const trainingDays = dayGroups.filter(d => d.dayName !== 'Mobilitätsblock').length;
     const cards = [
       { label: 'Trainingstage', value: `${trainingDays} Tage` },
@@ -233,6 +253,95 @@ export class PdfExportService {
     doc.save(filename);
   }
 
+  /** Extrahiert Ziel, Frequenz und Dauer aus der Plandescription. */
+  private parsePlanMeta(
+    description: string,
+    dayGroups: TrainingDayGroup[]
+  ): { goal?: string; daysPerWeek?: number; sessionMinutes?: number } {
+    const result: { goal?: string; daysPerWeek?: number; sessionMinutes?: number } = {};
+
+    if (description) {
+      const goalMatch = description.match(/\|\s*Ziel:\s*([^|]+)/);
+      if (goalMatch) result.goal = goalMatch[1].trim();
+
+      const daysMatch = description.match(/\|\s*(\d+)x\/Woche/);
+      if (daysMatch) result.daysPerWeek = parseInt(daysMatch[1], 10);
+
+      const minMatch = description.match(/\|\s*(\d+)\s*min\/Einheit/);
+      if (minMatch) result.sessionMinutes = parseInt(minMatch[1], 10);
+    }
+
+    // Fallback: Anzahl Trainingstage aus dayGroups
+    if (!result.daysPerWeek) {
+      const n = dayGroups.filter(d => d.dayName !== 'Mobilitätsblock').length;
+      if (n > 0) result.daysPerWeek = n;
+    }
+
+    return result;
+  }
+
+  /** Zeichnet eine kompakte RPE-Skala als farbige Leiste. */
+  private drawRpeScale(doc: jsPDF, pageW: number, margin: number, y: number): void {
+    const zones: { label: string; sub: string; color: RGB; range: string }[] = [
+      { range: '1 – 4', label: 'Leicht',   sub: 'Viele Wdh. möglich',       color: [4,   120, 87 ] },
+      { range: '5 – 6', label: 'Moderat',  sub: 'Anstrengend, kontrolliert', color: [146, 64,  14 ] },
+      { range: '7 – 8', label: 'Schwer',   sub: '1–2 Wdh. Reserve',         color: [194, 65,  12 ] },
+      { range: '9 – 10',label: 'Maximal',  sub: 'Fast keine Reserve',        color: [185, 28,  28 ] },
+    ];
+
+    const totalW  = pageW - margin * 2;
+    const labelW  = 22; // Platz für "RPE-Skala"-Label links
+    const gapW    = 1;  // Abstand zwischen Zonen
+    const zoneW   = (totalW - labelW - gapW * 3) / 4; // 4 Zonen, 3 Lücken
+    const boxH    = 16;
+
+    // Rahmen + Titel
+    doc.setDrawColor(...this.C_BORDER);
+    doc.setFillColor(250, 250, 255);
+    doc.roundedRect(margin, y, totalW, boxH + 2, 2, 2, 'FD');
+
+    // Titel links
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...this.C_GRAY);
+    doc.text('RPE-Skala', margin + 2, y + 5);
+
+    const startX = margin + labelW;
+
+    zones.forEach((zone, i) => {
+      const zx = startX + i * (zoneW + gapW);
+      const zy = y + 1;
+
+      // Farbiger Hintergrund
+      const bg: RGB = [
+        Math.round(zone.color[0] * 0.15 + 240),
+        Math.round(zone.color[1] * 0.15 + 240),
+        Math.round(zone.color[2] * 0.15 + 240),
+      ];
+      doc.setFillColor(...bg);
+      doc.setDrawColor(...zone.color);
+      doc.roundedRect(zx, zy, zoneW, boxH, 1.5, 1.5, 'FD');
+
+      // RPE-Bereich (fett, farbig)
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...zone.color);
+      doc.text(`RPE ${zone.range}`, zx + zoneW / 2, zy + 5.5, { align: 'center' });
+
+      // Label
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
+      doc.setTextColor(...this.C_DARK);
+      doc.text(zone.label, zx + zoneW / 2, zy + 10, { align: 'center' });
+
+      // Beschreibung
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(5.5);
+      doc.setTextColor(...this.C_GRAY);
+      doc.text(zone.sub, zx + zoneW / 2, zy + 14, { align: 'center' });
+    });
+  }
+
   /**
    * Extrahiert nur den sinnvollen Teil der Beschreibung.
    * Entfernt "KI-generiert:", Tages-Rotations-Hinweise und Doppelungen.
@@ -256,7 +365,7 @@ export class PdfExportService {
     doc.setFontSize(7);
     doc.setTextColor(...this.C_GRAY);
     doc.setFont('helvetica', 'normal');
-    doc.text('FitMe – KI-Trainingsplan', 16, pageH - 5);
+    doc.text('Fitme - Trainingsplan', 16, pageH - 5);
     doc.text(`Seite ${curr} / ${total}`, pageW - 16, pageH - 5, { align: 'right' });
   }
 

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TrainingService } from '../../services/training.service';
 import { PdfExportService } from '../../services/pdf-export.service';
+import { ExcelExportService } from '../../services/excel-export.service';
 import {
   FeedbackAvailability, PlannedExercise,
   SessionFeedbackResponse, TrainingDayGroup, TrainingPlanDetail
@@ -21,11 +22,13 @@ export class TrainingPlan implements OnInit {
   plan: TrainingPlanDetail | null = null;
   dayGroups: TrainingDayGroup[] = [];
   feedbackAvailability: FeedbackAvailability | null = null;
+  activeDayTab = 0;
 
   isLoading        = false;
   isDeleting       = false;
   isTogglingStatus = false;
   isExportingPdf   = false;
+  isExportingXlsx  = false;
   isAdmin          = false;
 
   statusMessage:  string | null = null;
@@ -69,7 +72,8 @@ export class TrainingPlan implements OnInit {
     private route:           ActivatedRoute,
     private router:          Router,
     private trainingService: TrainingService,
-    private pdfExport:       PdfExportService
+    private pdfExport:       PdfExportService,
+    private excelExport:     ExcelExportService
   ) {}
 
   ngOnInit(): void {
@@ -125,6 +129,18 @@ export class TrainingPlan implements OnInit {
       this.pdfExport.exportPlan(this.plan, this.dayGroups);
     } finally {
       setTimeout(() => this.isExportingPdf = false, 800);
+    }
+  }
+
+  // ── Excel-Export ─────────────────────────────────────────────────────────
+
+  exportExcel(): void {
+    if (!this.plan) return;
+    this.isExportingXlsx = true;
+    try {
+      this.excelExport.exportPlan(this.plan, this.dayGroups);
+    } finally {
+      setTimeout(() => this.isExportingXlsx = false, 800);
     }
   }
 

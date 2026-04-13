@@ -25,6 +25,7 @@ export class TrainingPlanEdit implements OnInit {
   planName    = '';
   description = '';
   trainingDays: ManualDay[] = [];
+  activeDayTab = 0;
   includeManualMobilityPlan = false;
   mobilityExercises: ExerciseInput[] = [];
 
@@ -41,16 +42,19 @@ export class TrainingPlanEdit implements OnInit {
   activeSuggestionKey: string | null    = null;
   suggestions:         ExerciseTemplate[] = [];
 
-  saveExModal:  { dayIdx: number | 'mob'; exIdx: number; muscleGroup: string; muscleFocus: string[] } | null = null;
-  loadDayModal: { dayIdx: number; filterGroup: string } | null = null;
-  saveDayModal: { dayIdx: number; name: string; muscleGroup: string } | null = null;
+  saveExModal:       { dayIdx: number | 'mob'; exIdx: number; muscleGroup: string; muscleFocus: string[] } | null = null;
+  loadDayModal:      { dayIdx: number; filterGroup: string } | null = null;
+  saveDayModal:      { dayIdx: number; name: string; muscleGroup: string } | null = null;
+  saveMobilityModal: { name: string } | null = null;
+  pickExModal:       { target: number | 'mob'; filterGroup: string } | null = null;
+  descExpanded = new Set<string>();
 
   readonly muscleGroupsForLibrary = [
-    'Beine', 'Glutes', 'Rücken', 'Brust', 'Schultern', 'Arme', 'Core', 'Ganzkörper', 'Mobilität'
+    'Beine', 'Rücken', 'Brust', 'Schultern', 'Arme', 'Core', 'Ganzkörper', 'Mobilität'
   ];
 
   readonly muscleFocusOptions: Record<string, string[]> = {
-    'Beine':     ['Quadrizeps', 'Hamstrings', 'Glutes', 'Waden'],
+    'Beine':     ['Quadrizeps', 'Hamstrings', 'Glutes', 'Waden', 'Plyometrics'],
     'Brust':     ['Obere Brust', 'Untere Brust', 'Volle Brust', 'Innenbereich'],
     'Rücken':    ['Latissimus', 'Mitte / Rhomboids', 'Unterer Rücken', 'Trapez'],
     'Schultern': ['Vordere Schulter', 'Seitliche Schulter', 'Hintere Schulter'],
@@ -69,7 +73,7 @@ export class TrainingPlanEdit implements OnInit {
     else          this.saveExModal.muscleFocus.push(tag);
   }
 
-  readonly dayNames = ['Tag A', 'Tag B', 'Tag C'];
+  readonly dayNames = ['Tag A', 'Tag B', 'Tag C', 'Tag D', 'Tag E', 'Tag F', 'Tag G'];
 
   constructor(
     private route:           ActivatedRoute,
@@ -144,6 +148,14 @@ export class TrainingPlanEdit implements OnInit {
     if (this.trainingDays.length === 0) {
       this.trainingDays = [{ dayName: 'Tag A', exercises: [this.emptyExercise()] }];
     }
+
+    // Pre-expand description fields for exercises that already have content
+    this.descExpanded = new Set<string>();
+    this.trainingDays.forEach((day, di) => {
+      day.exercises.forEach((ex, i) => {
+        if (ex.description?.trim()) this.descExpanded.add(`d${di}_${i}`);
+      });
+    });
   }
 
   // ── Leere Vorlagen ─────────────────────────────────────────────────────────
@@ -159,14 +171,18 @@ export class TrainingPlanEdit implements OnInit {
   // ── Tag-Verwaltung ─────────────────────────────────────────────────────────
 
   addDay(): void {
-    if (this.trainingDays.length >= 3) return;
+    if (this.trainingDays.length >= 7) return;
     this.trainingDays.push({ dayName: this.dayNames[this.trainingDays.length], exercises: [this.emptyExercise()] });
+    this.activeDayTab = this.trainingDays.length - 1;
   }
 
   removeDay(i: number): void {
     if (this.trainingDays.length <= 1) return;
     this.trainingDays.splice(i, 1);
     this.trainingDays.forEach((d, idx) => d.dayName = this.dayNames[idx]);
+    if (this.activeDayTab >= this.trainingDays.length) {
+      this.activeDayTab = this.trainingDays.length - 1;
+    }
   }
 
   addExercise(dayIdx: number): void {
@@ -299,6 +315,70 @@ export class TrainingPlanEdit implements OnInit {
     this.trainingService.deleteDayTemplate(id).subscribe({
       next: () => this.dayTemplates = this.dayTemplates.filter(t => t.id !== id), error: () => {}
     });
+  }
+
+  // ── Mobilitätsblock als Vorlage speichern ──────────────────────────────────
+
+  openSaveMobilityModal(): void {
+    this.saveMobilityModal = { name: 'Mobilitätsblock' };
+  }
+
+  confirmSaveMobilityTemplate(): void {
+    if (!this.saveMobilityModal) return;
+    const { name } = this.saveMobilityModal;
+    if (!name.trim()) { this.saveMobilityModal = null; return; }
+    this.trainingService.saveDayTemplate({
+      templateName: name.trim(), muscleGroup: 'Mobilität',
+      exercises: this.mobilityExercises.map(e => ({
+        exerciseName: e.exerciseName, sets: e.sets, reps: e.reps, weightKg: e.weightKg,
+        restSeconds: e.restSeconds, targetRpe: e.targetRpe ?? 0, description: e.description ?? ''
+      }))
+    } as any).subscribe({ next: t => { this.dayTemplates.push(t); this.saveMobilityModal = null; }, error: () => { this.saveMobilityModal = null; } });
+  }
+
+  // ── Übung aus Bibliothek wählen ────────────────────────────────────────────
+
+  openPickExModal(target: number | 'mob'): void {
+    this.pickExModal = { target, filterGroup: target === 'mob' ? 'Mobilität' : '' };
+  }
+
+  get filteredPickExercises(): ExerciseTemplate[] {
+    if (!this.pickExModal?.filterGroup) return [];
+    const group = this.pickExModal.filterGroup;
+    const match = group === 'Beine'
+      ? (t: ExerciseTemplate) => t.muscleGroup === 'Beine' || t.muscleGroup === 'Glutes'
+      : (t: ExerciseTemplate) => t.muscleGroup === group;
+    return this.exerciseTemplates.filter(match);
+  }
+
+  addExFromLibrary(tpl: ExerciseTemplate): void {
+    if (!this.pickExModal) return;
+    const isMob = this.pickExModal.target === 'mob';
+    const ex: ExerciseInput = {
+      exerciseName:  tpl.exerciseName,
+      sets:          3,
+      reps:          tpl.defaultReps,
+      weightKg:      tpl.defaultWeightKg,
+      restSeconds:   tpl.defaultRestSeconds,
+      targetRpe:     isMob ? undefined : tpl.defaultTargetRpe,
+      description:   tpl.description ?? '',
+    };
+    if (isMob) {
+      this.mobilityExercises.push(ex);
+    } else {
+      this.trainingDays[this.pickExModal.target as number].exercises.push(ex);
+    }
+  }
+
+  // ── Beschreibung für normale Übungen ──────────────────────────────────────
+
+  toggleDesc(key: string): void {
+    if (this.descExpanded.has(key)) this.descExpanded.delete(key);
+    else this.descExpanded.add(key);
+  }
+
+  isDescExpanded(key: string): boolean {
+    return this.descExpanded.has(key);
   }
 
   // ── Hilfsmethoden ──────────────────────────────────────────────────────────

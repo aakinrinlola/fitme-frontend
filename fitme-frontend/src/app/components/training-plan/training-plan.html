@@ -72,6 +72,13 @@
       </span>
     </button>
 
+    <button class="btn btn--excel" (click)="exportExcel()" [disabled]="isExportingXlsx || isLoading">
+      <span *ngIf="!isExportingXlsx">📊 Als Excel herunterladen</span>
+      <span *ngIf="isExportingXlsx" class="spinner-wrap">
+        <span class="spinner"></span>Excel wird erstellt…
+      </span>
+    </button>
+
     <a *ngIf="isAdmin" [routerLink]="['/training-plan', planId, 'edit']"
        class="btn btn--edit">✏️ Bearbeiten</a>
 
@@ -84,124 +91,127 @@
     {{ statusMessage }}
   </div>
 
-  <!-- Trainingstage -->
-  <div class="days-grid" *ngIf="dayGroups.length > 0">
+  <!-- Trainingstage — Tab-Navigation -->
+  <div class="day-tabs-container" *ngIf="dayGroups.length > 0">
 
-    <div *ngFor="let group of dayGroups; let i = index"
-         class="day-card"
-         [ngClass]="getDayCardClass(i, group.dayName)">
+    <!-- Tab-Bar -->
+    <div class="day-tabs">
+      <button *ngFor="let group of dayGroups; let i = index"
+              type="button"
+              class="day-tab"
+              [class.day-tab--active]="activeDayTab === i"
+              [class.day-tab--mobility]="group.dayName === 'Mobilitätsblock'"
+              (click)="activeDayTab = i">
+        <span *ngIf="group.dayName === 'Mobilitätsblock'">🧘 </span>{{ group.dayName }}
+        <span class="day-tab__count">{{ group.exercises.length }}</span>
+      </button>
+    </div>
 
-      <!-- Card Header -->
-      <div class="day-card__header">
-        <div class="day-card__label">{{ group.dayName }}</div>
-        <div class="day-card__count">{{ group.exercises.length }} Übungen</div>
-        <span class="mobility-tag" *ngIf="group.dayName === 'Mobilitätsblock'">🧘 Mobility</span>
-      </div>
+    <!-- Aktiver Tag -->
+    <ng-container *ngFor="let group of dayGroups; let i = index">
+      <div class="day-card day-tab-panel" *ngIf="activeDayTab === i"
+           [ngClass]="getDayCardClass(i, group.dayName)">
 
-      <!-- ══════════════════ NORMALER TAG — Tabelle ══════════════════ -->
-      <ng-container *ngIf="group.dayName !== 'Mobilitätsblock'">
-        <table class="exercise-table">
-          <thead>
-          <tr>
-            <th class="th--num">#</th>
-            <th class="th--name">Übung</th>
-            <th>Sätze</th>
-            <th>Wdh</th>
-            <th>Gewicht</th>
-            <th>Pause</th>
-            <th>RPE</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr *ngFor="let ex of group.exercises; let j = index" class="exercise-row">
-            <td class="td--num">{{ j + 1 }}</td>
-            <td class="td--name">
-              <span class="ex-name">{{ ex.exerciseName }}</span>
-            </td>
-            <td>{{ ex.sets }}</td>
-            <td>{{ ex.reps }}</td>
-            <td>
-              <span *ngIf="ex.weightKg > 0">{{ ex.weightKg }} kg</span>
-              <span *ngIf="ex.weightKg === 0" class="no-weight">—</span>
-            </td>
-            <td>{{ ex.restSeconds }}s</td>
-            <td>
-              <span class="rpe-badge" [ngClass]="getRpeClass(ex.targetRpe)">{{ ex.targetRpe }}</span>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </ng-container>
+        <!-- Card Header -->
+        <div class="day-card__header">
+          <div class="day-card__label">{{ group.dayName }}</div>
+          <div class="day-card__count">{{ group.exercises.length }} Übungen</div>
+          <span class="mobility-tag" *ngIf="group.dayName === 'Mobilitätsblock'">🧘 Mobility</span>
+        </div>
 
-      <!-- ══════════════════ MOBILITÄTSBLOCK — Kompaktes Card-Layout ══════════════════ -->
-      <ng-container *ngIf="group.dayName === 'Mobilitätsblock'">
-        <div class="mobility-list">
-          <div *ngFor="let ex of group.exercises; let j = index"
-               class="mobility-item"
-               [class.mobility-item--expanded]="isDescriptionExpanded(ex.id)">
+        <!-- ══ NORMALER TAG — Tabelle ══ -->
+        <ng-container *ngIf="group.dayName !== 'Mobilitätsblock'">
+          <table class="exercise-table">
+            <thead>
+            <tr>
+              <th class="th--num">#</th>
+              <th class="th--name">Übung</th>
+              <th>Sätze</th>
+              <th>Wdh</th>
+              <th>Gewicht</th>
+              <th>Pause</th>
+              <th>RPE</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let ex of group.exercises; let j = index" class="exercise-row">
+              <td class="td--num">{{ j + 1 }}</td>
+              <td class="td--name">
+                <span class="ex-name">{{ ex.exerciseName }}</span>
+              </td>
+              <td>{{ ex.sets }}</td>
+              <td>{{ ex.reps }}</td>
+              <td>
+                <span *ngIf="ex.weightKg > 0">{{ ex.weightKg }} kg</span>
+                <span *ngIf="ex.weightKg === 0" class="no-weight">—</span>
+              </td>
+              <td>{{ ex.restSeconds }}s</td>
+              <td>
+                <span class="rpe-badge" [ngClass]="getRpeClass(ex.targetRpe)">{{ ex.targetRpe }}</span>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </ng-container>
 
-            <!-- Hauptzeile -->
-            <div class="mobility-item__main">
-
-              <!-- Nummer -->
-              <span class="mobility-item__num">{{ j + 1 }}</span>
-
-              <!-- Name & Inline-Stats -->
-              <div class="mobility-item__body">
-                <span class="mobility-item__name">{{ ex.exerciseName }}</span>
-                <div class="mobility-item__stats">
-                  <span class="mob-stat" *ngIf="ex.sets">
-                    <span class="mob-stat__label">Sätze</span>
-                    <span class="mob-stat__val">{{ ex.sets }}</span>
-                  </span>
-                  <span class="mob-stat__sep" *ngIf="ex.sets && ex.reps">×</span>
-                  <span class="mob-stat" *ngIf="ex.reps">
-                    <span class="mob-stat__label">Wdh</span>
-                    <span class="mob-stat__val">{{ ex.reps }}</span>
-                  </span>
-                  <span class="mob-stat" *ngIf="ex.restSeconds">
-                    <span class="mob-stat__label">Pause</span>
-                    <span class="mob-stat__val">{{ ex.restSeconds }}s</span>
-                  </span>
-                  <span class="rpe-badge rpe-badge--sm" [ngClass]="getRpeClass(ex.targetRpe)">
-                    RPE {{ ex.targetRpe }}
-                  </span>
+        <!-- ══ MOBILITÄTSBLOCK — Kompaktes Card-Layout ══ -->
+        <ng-container *ngIf="group.dayName === 'Mobilitätsblock'">
+          <div class="mobility-list">
+            <div *ngFor="let ex of group.exercises; let j = index"
+                 class="mobility-item"
+                 [class.mobility-item--expanded]="isDescriptionExpanded(ex.id)">
+              <div class="mobility-item__main">
+                <span class="mobility-item__num">{{ j + 1 }}</span>
+                <div class="mobility-item__body">
+                  <span class="mobility-item__name">{{ ex.exerciseName }}</span>
+                  <div class="mobility-item__stats">
+                    <span class="mob-stat" *ngIf="ex.sets">
+                      <span class="mob-stat__label">Sätze</span>
+                      <span class="mob-stat__val">{{ ex.sets }}</span>
+                    </span>
+                    <span class="mob-stat__sep" *ngIf="ex.sets && ex.reps">×</span>
+                    <span class="mob-stat" *ngIf="ex.reps">
+                      <span class="mob-stat__label">Wdh</span>
+                      <span class="mob-stat__val">{{ ex.reps }}</span>
+                    </span>
+                    <span class="mob-stat" *ngIf="ex.restSeconds">
+                      <span class="mob-stat__label">Pause</span>
+                      <span class="mob-stat__val">{{ ex.restSeconds }}s</span>
+                    </span>
+                    <span class="rpe-badge rpe-badge--sm" [ngClass]="getRpeClass(ex.targetRpe)">
+                      RPE {{ ex.targetRpe }}
+                    </span>
+                  </div>
+                </div>
+                <button *ngIf="ex.description && ex.description.trim()"
+                        class="mobility-item__toggle"
+                        (click)="toggleDescription(ex.id)"
+                        [title]="isDescriptionExpanded(ex.id) ? 'Beschreibung schließen' : 'Anleitung anzeigen'">
+                  <span class="toggle-icon" [class.toggle-icon--open]="isDescriptionExpanded(ex.id)">▾</span>
+                </button>
+              </div>
+              <div class="mobility-item__desc"
+                   *ngIf="ex.description && ex.description.trim() && isDescriptionExpanded(ex.id)">
+                <div class="mobility-item__desc-inner">
+                  <span class="desc-icon">📋</span>
+                  <p>{{ ex.description }}</p>
                 </div>
               </div>
-
-              <!-- Expand-Toggle (nur wenn Beschreibung vorhanden) -->
-              <button *ngIf="ex.description && ex.description.trim()"
-                      class="mobility-item__toggle"
-                      (click)="toggleDescription(ex.id)"
-                      [title]="isDescriptionExpanded(ex.id) ? 'Beschreibung schließen' : 'Anleitung anzeigen'">
-                <span class="toggle-icon" [class.toggle-icon--open]="isDescriptionExpanded(ex.id)">▾</span>
-              </button>
             </div>
-
-            <!-- Beschreibung (aufklappbar) -->
-            <div class="mobility-item__desc"
-                 *ngIf="ex.description && ex.description.trim() && isDescriptionExpanded(ex.id)">
-              <div class="mobility-item__desc-inner">
-                <span class="desc-icon">📋</span>
-                <p>{{ ex.description }}</p>
-              </div>
-            </div>
-
           </div>
-        </div>
+          <div class="mobility-footer" *ngIf="group.exercises.length > 0">
+            <button class="mobility-footer__btn" (click)="expandAllDescriptions(group.exercises)">
+              Alle Anleitungen anzeigen
+            </button>
+            <button class="mobility-footer__btn" (click)="collapseAllDescriptions()">
+              Alle schließen
+            </button>
+          </div>
+        </ng-container>
 
-        <!-- Hinweis: alle aufklappen -->
-        <div class="mobility-footer" *ngIf="group.exercises.length > 0">
-          <button class="mobility-footer__btn" (click)="expandAllDescriptions(group.exercises)">
-            Alle Anleitungen anzeigen
-          </button>
-          <button class="mobility-footer__btn" (click)="collapseAllDescriptions()">
-            Alle schließen
-          </button>
-        </div>
-      </ng-container>
+      </div>
+    </ng-container>
 
-    </div>
   </div>
 
   <p class="empty-state" *ngIf="dayGroups.length === 0">
